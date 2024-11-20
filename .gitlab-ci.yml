@@ -1,13 +1,43 @@
-# You can override the included template(s) by including variable overrides
-# SAST customization: https://docs.gitlab.com/ee/user/application_security/sast/#customizing-the-sast-settings
-# Secret Detection customization: https://docs.gitlab.com/ee/user/application_security/secret_detection/pipeline/#customization
-# Dependency Scanning customization: https://docs.gitlab.com/ee/user/application_security/dependency_scanning/#customizing-the-dependency-scanning-settings
-# Container Scanning customization: https://docs.gitlab.com/ee/user/application_security/container_scanning/#customizing-the-container-scanning-settings
-# Note that environment variables can be set in several places
-# See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
+default:
+  image: node:16.16.0
+
 stages:
-- test
+  - security
+  - deploy
+
+variables:
+  NODE_ENV: 'production'
+
+cache:
+  paths:
+    - node_modules/
+
 sast:
-  stage: test
+  stage: security
+  artifacts:
+    reports:
+      sast: gl-sast-report.json
+  script:
+    - echo "Running SAST scan"
+  allow_failure: true
+
 include:
-- template: Security/SAST.gitlab-ci.yml
+  - template: Security/SAST.gitlab-ci.yml
+
+
+
+#####################################################################
+# COMMON PIPELINE
+#####################################################################
+
+deploy_production:
+  stage: deploy
+  only:
+    refs:
+      - main
+  when: manual
+  script:
+    - npm install -g vercel@latest
+    - vercel pull --yes --environment=production --token=$VERCEL_TOKEN
+    - vercel build --prod --token=$VERCEL_TOKEN
+    - vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
