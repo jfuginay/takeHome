@@ -8,12 +8,9 @@ import {
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { env } from "~/env.mjs";
 import { prisma } from "~/server/db";
-import Email from "next-auth/providers/email";
 import { type UserRole } from "@prisma/client";
-import GoogleProvider from "next-auth/providers/google";
 import Okta from "next-auth/providers/okta";
-import FacebookProvider from "next-auth/providers/facebook";
-import { createTransport } from "nodemailer";
+
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -182,48 +179,41 @@ export const authOptions: NextAuthOptions = {
 
   adapter: PrismaAdapter(prisma),
   providers: [
-    Email({
-      server: {
-        host: env.EMAIL_HOST,
-        port: Number(env.EMAIL_PORT),
-        auth: {
-          user: env.EMAIL_USERNAME,
-          pass: env.EMAIL_PASSWORD,
-        },
-      },
-      from: env.EMAIL_FROM,
+    // Email({
+    //   server: {
+    //     host: env.EMAIL_HOST,
+    //     port: Number(env.EMAIL_PORT),
+    //     auth: {
+    //       user: env.EMAIL_USERNAME,
+    //       pass: env.EMAIL_PASSWORD,
+    //     },
+    //   },
+    //   from: env.EMAIL_FROM,
+    //
+    //   sendVerificationRequest: async ({identifier: email, provider: {server, from}, url, theme}) => {
+    //       const { host } = new URL(url);
+    //       const transport = createTransport(server);
+    //       const result = await transport.sendMail({
+    //         to: email,
+    //         from: from,
+    //         subject: `Sign in to ${host}`,
+    //         text: text({ url, host }),
+    //         html: html({ url, host, theme }),
+    //       });
+    //
+    //       const failed = result.rejected.concat(result.pending).filter(Boolean);
+    //       if (failed.length) {
+    //         throw new Error(
+    //           `Email(s) (${failed.join(", ")}) could not be sent`
+    //         );
+    //       }
+    //     },
+    // }),
 
-      sendVerificationRequest: async ({identifier: email, provider: {server, from}, url, theme}) => {
-          const { host } = new URL(url);
-          const transport = createTransport(server);
-          const result = await transport.sendMail({
-            to: email,
-            from: from,
-            subject: `Sign in to ${host}`,
-            text: text({ url, host }),
-            html: html({ url, host, theme }),
-          });
-
-          const failed = result.rejected.concat(result.pending).filter(Boolean);
-          if (failed.length) {
-            throw new Error(
-              `Email(s) (${failed.join(", ")}) could not be sent`
-            );
-          }
-        },
-    }),
-    GoogleProvider({
-      clientId: env.GOOGLE_CLIENT_ID,
-      clientSecret: env.GOOGLE_CLIENT_SECRET,
-    }),
-    FacebookProvider({
-      clientId: env.FACEBOOK_CLIENT_ID,
-      clientSecret: env.FACEBOOK_CLIENT_SECRET,
-    }),
     Okta({
       clientId: env.AUTH0_CLIENT_ID,
       clientSecret: env.AUTH0_CLIENT_SECRET,
-      issuer: env.AUTH0_ISSUER,
+      issuer: env.AUTH0_ISSUER
     }),
     /**
      * ...add more providers here.
