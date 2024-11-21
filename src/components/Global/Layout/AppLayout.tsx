@@ -21,7 +21,7 @@ export default function DefaultLayout({ children }: { children: ReactNode }) {
 const Navbar = ({ ...rest }) => {
   return (
     <Flex
-      p='5'
+      pl='5'
       height="20"
       alignItems="center"
       bg={"teal.500"}
@@ -32,11 +32,9 @@ const Navbar = ({ ...rest }) => {
     >
       <Flex w='full' justifyContent={{md: 'space-between', base: 'center'}} alignItems={'center'}>
         <Text display={{ base: 'none', md: 'inline-block' }} as='b' fontSize='2xl' color={'white'}>HedgePulse</Text>
-        <Image
+        <img
             src={'/hedgepulse.png'}
             alt={"No Logo"}
-            width={400}
-            height={400}
         />
       </Flex>
     </Flex>

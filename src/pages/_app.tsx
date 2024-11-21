@@ -5,7 +5,8 @@ import { type AppProps } from "next/app";
 import { type Session } from "next-auth";
 
 import { SessionProvider } from "next-auth/react";
-import { ChakraProvider } from "@chakra-ui/react";
+
+import {ChakraProvider, extendTheme, ThemeConfig} from "@chakra-ui/react";
 
 import { api } from "~/utils/api";
 
@@ -23,6 +24,13 @@ type AppPropsWithLayout = AppProps & {
   Component: NextPageWithLayout;
 };
 
+const config: ThemeConfig = {
+  initialColorMode: "dark",
+};
+export const theme = extendTheme({
+  config: { ...config },
+});
+
 const MyApp = ({
   Component,
   pageProps: { session, ...pageProps },
@@ -31,7 +39,7 @@ const MyApp = ({
 
   return (
     <SessionProvider session={session as Session | null}>
-       <ChakraProvider>
+       <ChakraProvider theme={theme}>
           {getLayout(<Component {...pageProps} />)}
          <ReactQueryDevtools position={'bottom-right'} />
        </ChakraProvider>

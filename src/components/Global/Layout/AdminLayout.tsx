@@ -216,7 +216,7 @@ const Navbar = ({ onOpen, ...rest }: MobileProps) => {
   return (
     <Flex
       ml={{ base: 0, md: 60 }}
-      px={{ base: 4, md: 4 }}
+      pl={{ base: 4, md: 4 }}
       height="20"
       alignItems="center"
       bg={"teal.500"}
@@ -240,15 +240,14 @@ const Navbar = ({ onOpen, ...rest }: MobileProps) => {
           display={{ base: "none", md: "inline-block" }}
           as="b"
           fontSize="3xl"
-          color={"black"}
+          color={"white"}
         >
           HedgePulse
         </Text>
-        <Image
+
+        <img
           src={"/hedgepulse.png"}
           alt={"No Logo"}
-          width={400}
-          height={400}
         />
       </Flex>
     </Flex>

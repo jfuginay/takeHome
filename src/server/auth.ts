@@ -13,7 +13,6 @@ import Okta from "next-auth/providers/okta";
 import {mockSession} from "next-auth/client/__tests__/helpers/mocks";
 import user = mockSession.user;
 
-
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
  * object and keep type safety.
@@ -49,7 +48,7 @@ declare module "next-auth" {
 
 export const authOptions: NextAuthOptions = {
   theme: {
-    colorScheme: "light",
+    colorScheme: "dark",
     brandColor: "#319795",
   },
   callbacks: {
