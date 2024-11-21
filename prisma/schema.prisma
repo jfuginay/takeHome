@@ -4,7 +4,7 @@
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["fullTextSearch", "fullTextIndex"]
-  binaryTargets   = ["native", "rhel-openssl-1.0.x"]
+  binaryTargets   = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
@@ -87,29 +87,28 @@ model Coordinate {
 }
 
 model StockData {
-  id                 Int       @id @default(autoincrement())
-  ticker             String    // Ticker symbol of the underlying asset
-  strikePrice        Float     // Strike price of the option
-  expirationDate     DateTime  // Expiration date of the option
-  contractType       String    // Type of the contract (call/put)
-  exerciseStyle      String    // Exercise style (e.g., American)
-  sharesPerContract  Int       // Number of shares per contract
-  impliedVolatility  Float     // Implied volatility of the option
-  openInterest       Int       // Open interest for the option
-  createdAt          DateTime  @default(now()) // Timestamp for when the record was created
+  id                Int      @id @default(autoincrement())
+  ticker            String // Ticker symbol of the underlying asset
+  strikePrice       Float // Strike price of the option
+  expirationDate    DateTime // Expiration date of the option
+  contractType      String // Type of the contract (call/put)
+  exerciseStyle     String // Exercise style (e.g., American)
+  sharesPerContract Int // Number of shares per contract
+  impliedVolatility Float // Implied volatility of the option
+  openInterest      Int // Open interest for the option
+  createdAt         DateTime @default(now()) // Timestamp for when the record was created
 
   // Optional fields for daily data
-  change             Float?    // Daily change in price
-  changePercent      Float?    // Daily change percentage
-  close              Float?    // Closing price
-  high               Float?    // Daily high price
-  low                Float?    // Daily low price
-  open               Float?    // Opening price
-  previousClose      Float?    // Previous closing price
-  volume             Int?      // Daily trading volume
-  vwap               Float?    // Volume-weighted average price
+  change        Float? // Daily change in price
+  changePercent Float? // Daily change percentage
+  close         Float? // Closing price
+  high          Float? // Daily high price
+  low           Float? // Daily low price
+  open          Float? // Opening price
+  previousClose Float? // Previous closing price
+  volume        Int? // Daily trading volume
+  vwap          Float? // Volume-weighted average price
 }
-
 
 model Address {
   id           Int  @id @default(autoincrement())
@@ -143,14 +142,14 @@ model Visit {
   id        Int @id @default(autoincrement())
   addressId Int
 
-  createdBy     String?
-  status        VisitStatus
-  name          String?
-  contact       String?
-  attendance    String?
-  notes         String?
-  prayerRequest String?
-  interested    Boolean?
+  createdBy        String?
+  status           VisitStatus
+  name             String?
+  contact          String?
+  attendance       String?
+  notes            String?
+  prayerRequest    String?
+  interested       Boolean?
   childrenK5InHome Boolean?
 
   address   Address  @relation(fields: [addressId], references: [id])
