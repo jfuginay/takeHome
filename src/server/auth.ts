@@ -10,6 +10,8 @@ import { env } from "~/env.mjs";
 import { prisma } from "~/server/db";
 import { type UserRole } from "@prisma/client";
 import Okta from "next-auth/providers/okta";
+import {mockSession} from "next-auth/client/__tests__/helpers/mocks";
+import user = mockSession.user;
 
 
 /**
@@ -51,118 +53,15 @@ export const authOptions: NextAuthOptions = {
     brandColor: "#319795",
   },
   callbacks: {
-    async signIn({ user, account }) {
-      // Specifically handle Google sign-ins
-      if (account?.provider === "google" && user?.email) {
-        const userFound = await prisma.user.findUnique({
-          where: { email: user.email },
-        });
+    async signIn({ user}) {
+      // Block users from creating an account if they do not already belong in the database
+      const u = await prisma.user.findUnique({where: { email: user.email || undefined }})
 
-        if (userFound) {
-          // User exists, check if the Google account is already linked
-          const linkedAccount = await prisma.account.findFirst({
-            where: {
-              userId: userFound.id,
-              provider: "google",
-            },
-          });
-
-          if (!linkedAccount) {
-            // Link the Google account to the existing user if not already linked
-            await prisma.account.create({
-              data: {
-                userId: userFound.id,
-                type: account.type,
-                provider: account.provider,
-                providerAccountId: account.providerAccountId,
-                access_token: account.access_token,
-                refresh_token: account.refresh_token,
-                expires_at: account.expires_at,
-              },
-            });
-          }
-
-          // Allow sign-in to proceed
-          return true;
-        } else {
-          // No existing user found with the Google email, allow NextAuth to create a new user
-          return true;
-        }
-      } // Handle Okta sign-ins
-      else if (account?.provider === "okta" && user?.email) {
-        const userFound = await prisma.user.findUnique({
-          where: { email: user.email },
-        });
-
-        if (userFound) {
-          // User exists, check if the Okta account is already linked
-          const linkedAccount = await prisma.account.findFirst({
-            where: {
-              userId: userFound.id,
-              provider: "okta",
-            },
-          });
-
-          if (!linkedAccount) {
-            // Link the Okta account to the existing user if not already linked
-            await prisma.account.create({
-              data: {
-                userId: userFound.id,
-                type: account.type,
-                provider: account.provider,
-                providerAccountId: account.providerAccountId,
-                access_token: account.access_token,
-                refresh_token: account.refresh_token,
-                expires_at: account.expires_at,
-              },
-            });
-          }
-
-          // Allow sign-in to proceed
-          return true;
-        } else {
-          // No existing user found with the Okta email, allow NextAuth to create a new user
-          return true;
-        }
-      } else if (account?.provider === "facebook" && user?.email) {
-        const userFound = await prisma.user.findUnique({
-          where: { email: user.email },
-        });
-
-        if (userFound) {
-          // User exists, check if the Facebook account is already linked
-          const linkedAccount = await prisma.account.findFirst({
-            where: {
-              userId: userFound.id,
-              provider: "facebook",
-            },
-          });
-
-          if (!linkedAccount) {
-            // Link the Facebook account to the existing user if not already linked
-            await prisma.account.create({
-              data: {
-                userId: userFound.id,
-                type: account.type,
-                provider: account.provider,
-                providerAccountId: account.providerAccountId,
-                access_token: account.access_token,
-                refresh_token: account.refresh_token,
-                expires_at: account.expires_at,
-              },
-            });
-          }
-
-          // Allow sign-in to proceed
-          return true;
-        } else {
-          // No existing user found with the Facebook email, allow NextAuth to create a new user
-          return true;
-        }
+      if (u) {
+        return true
+      } else {
+        return '/unauthorized'
       }
-
-      // Default behavior for other providers or sign-in methods
-      return true;
     },
 
     session({ session, user }) {

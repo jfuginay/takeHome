@@ -67,35 +67,5 @@ export default function AuthRequired({
     );
   }
 
-  if (
-    data.user.role == UserRole.user &&
-    data.user.groupId === null &&
-    !allowNoGroup
-  ) {
-    return (
-      <Center h={"85vh"}>
-        <Flex
-          direction={"column"}
-          justifyContent={"center"}
-          alignItems={"center"}
-          textAlign={"center"}
-          margin={"0 20px"}
-        >
-          <Text
-            as={"b"}
-            fontSize={{ md: "7xl", base: "5xl" }}
-            color={"red.400"}
-          >
-            Access denied
-          </Text>
-
-          <Text fontSize={"xl"}>
-            You need to request access to this area
-          </Text>
-        </Flex>
-      </Center>
-    );
-  }
-
   return <main>{children}</main>;
 }

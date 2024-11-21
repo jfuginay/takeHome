@@ -51,7 +51,7 @@ const Home: NextPageWithLayout = () => {
               colorScheme="teal"
               width="20rem"
               size="md"
-              onClick={() => void signIn(undefined, { callbackUrl: "/admin/map-view" })}
+              onClick={() => void signIn(undefined, { callbackUrl: "/admin/dashboard" })}
             >
               Sign In
             </Button>
