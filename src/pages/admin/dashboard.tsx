@@ -99,9 +99,6 @@ const Dashboard: NextPageWithLayout = () => {
                 data={chartData}
                 options={chartOptions}
                 ref={(ref) => {
-                  if (ref) {
-                    chartRef.current = ref;
-                  }
                 }}
               />
             </Box>
