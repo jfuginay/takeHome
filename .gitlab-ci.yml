@@ -2,7 +2,7 @@ default:
   image: node:16.16.0
 
 stages:
-  - install
+  - security
   - deploy
 
 variables:
@@ -12,18 +12,17 @@ cache:
   paths:
     - node_modules/
 
-before_script:
-  stage: install
-  - npm install
-
-# sast:
-#   stage: security
-#   artifacts:
-#     reports:
-#       sast: gl-sast-report.json
-#   script:
-#     - echo "Running SAST scan"
-#   allow_failure: true
+sast:
+  stage: security
+  only:
+    refs:
+      - dev
+  artifacts:
+    reports:
+      sast: gl-sast-report.json
+  script:
+    - echo "Running SAST scan"
+  allow_failure: true
 
 include:
   - template: Security/SAST.gitlab-ci.yml
