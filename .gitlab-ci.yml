@@ -14,9 +14,6 @@ cache:
 
 sast:
   stage: security
-  only:
-    refs:
-      - dev
   artifacts:
     reports:
       sast: gl-sast-report.json
