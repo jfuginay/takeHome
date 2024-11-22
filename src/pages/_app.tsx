@@ -16,6 +16,8 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 
 import "~/styles/globals.css";
 
+import theme from "./theme"; // Import the custom theme
+
 export type NextPageWithLayout<P = object, IP = P> = NextPage<P, IP> & {
   getLayout?: (page: ReactElement) => ReactNode;
 };
