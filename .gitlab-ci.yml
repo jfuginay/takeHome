@@ -2,7 +2,6 @@ default:
   image: node:16.16.0
 
 stages:
-  - security
   - deploy
 
 variables:
@@ -11,24 +10,6 @@ variables:
 cache:
   paths:
     - node_modules/
-
-sast:
-  stage: security
-  artifacts:
-    reports:
-      sast: gl-sast-report.json
-  script:
-    - echo "Running SAST scan"
-  allow_failure: true
-
-include:
-  - template: Security/SAST.gitlab-ci.yml
-
-
-
-#####################################################################
-# COMMON PIPELINE
-#####################################################################
 
 deploy_production:
   stage: deploy
