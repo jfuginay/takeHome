@@ -12,14 +12,14 @@ cache:
   paths:
     - node_modules/
 
-sast:
-  stage: security
-  artifacts:
-    reports:
-      sast: gl-sast-report.json
-  script:
-    - echo "Running SAST scan"
-  allow_failure: true
+# sast:
+#   stage: security
+#   artifacts:
+#     reports:
+#       sast: gl-sast-report.json
+#   script:
+#     - echo "Running SAST scan"
+#   allow_failure: true
 
 include:
   - template: Security/SAST.gitlab-ci.yml
