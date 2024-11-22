@@ -2,7 +2,6 @@ default:
   image: node:16.16.0
 
 stages:
-  - security
   - deploy
 
 variables:
