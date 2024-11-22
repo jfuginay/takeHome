@@ -10,6 +10,7 @@ const config = {
     },
     extend: {},
   },
+  darkMode: 'class', // Use class-based dark mode
   plugins: [],
 };
 
