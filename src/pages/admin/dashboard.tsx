@@ -61,11 +61,11 @@ const Dashboard: NextPageWithLayout = () => {
     maintainAspectRatio: false,
     scales: {
       x: {
-        type: "category", // Ensure the type is correctly specified
+        type: "category" as const, // Ensure the type is correctly specified
         beginAtZero: true,
       },
       y: {
-        type: "linear", // Ensure the type is correctly specified
+        type: "linear" as const, // Ensure the type is correctly specified
         beginAtZero: true,
       },
     },
@@ -100,7 +100,7 @@ const Dashboard: NextPageWithLayout = () => {
                 options={chartOptions}
                 ref={(ref) => {
                   if (ref) {
-                    chartRef.current = ref.chartInstance;
+                    chartRef.current = ref;
                   }
                 }}
               />
