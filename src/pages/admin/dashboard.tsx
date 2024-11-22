@@ -1,11 +1,23 @@
-import { Chart, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from "chart.js";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  BubbleDataPoint,
+  ChartTypeRegistry,
+  Point,
+} from "chart.js";
+import { Chart } from "react-chartjs-2"; // Import Chart from react-chartjs-2
 import { useRef, useEffect } from "react";
 
 // Register Chart.js components
-Chart.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const Dashboard = () => {
-  const chartRef = useRef<Chart | null>(null);
+  const chartRef = useRef<ChartJS | null>(null);
 
   useEffect(() => {
     // Cleanup chart when component unmounts
@@ -51,10 +63,10 @@ const Dashboard = () => {
         type="bar"
         data={chartData}
         options={chartOptions}
-        ref={(ref) => {
+        ref={(ref: { chartInstance: ChartJS<keyof ChartTypeRegistry, (number | [number, number] | Point | BubbleDataPoint | null)[], unknown> | null; }) => {
           // Access the Chart.js instance directly
           if (ref) {
-            chartRef.current = ref as unknown as ChartJS; // Cast ref to ChartJS instance
+            chartRef.current = ref.chartInstance; // Correct way to access the Chart.js instance
           }
         }}
       />
