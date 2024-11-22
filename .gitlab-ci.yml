@@ -2,6 +2,7 @@ default:
   image: node:16.16.0
 
 stages:
+  - install
   - deploy
 
 variables:
@@ -10,6 +11,10 @@ variables:
 cache:
   paths:
     - node_modules/
+
+before_script:
+  stage: install
+  - npm install
 
 # sast:
 #   stage: security
