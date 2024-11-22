@@ -3,11 +3,9 @@ import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import axios from "axios";
 import { env } from "~/env.mjs";
 import { TRPCError } from "@trpc/server";
-import { AllowAccess, RoleSets } from "~/server/middleware/roles";
 
 export const stockRouter = createTRPCRouter({
   create: protectedProcedure
-    .use(AllowAccess(RoleSets.admins))
     .input(
       z.object({
         strikePriceMin: z.number(),
@@ -100,6 +98,8 @@ export const stockRouter = createTRPCRouter({
           stockData,
         };
       } catch (error) {
+        console.error(error);
+        console.log('error', error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "An error occurred while fetching stock options",
@@ -108,7 +108,6 @@ export const stockRouter = createTRPCRouter({
     }),
 
   getStockData: protectedProcedure
-    .use(AllowAccess(RoleSets.admins))
     .query(async () => {
       try {
         const response = await axios.get(
