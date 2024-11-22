@@ -1,11 +1,11 @@
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from "chart.js";
+import { Chart, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from "chart.js";
 import { useRef, useEffect } from "react";
 
 // Register Chart.js components
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+Chart.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const Dashboard = () => {
-  const chartRef = useRef<ChartJS | null>(null);
+  const chartRef = useRef<Chart | null>(null);
 
   useEffect(() => {
     // Cleanup chart when component unmounts
