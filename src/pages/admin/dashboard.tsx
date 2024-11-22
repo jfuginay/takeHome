@@ -61,11 +61,11 @@ const Dashboard: NextPageWithLayout = () => {
     maintainAspectRatio: false,
     scales: {
       x: {
-        type: "category", // Ensure the type is correctly specified
+        type: 'category' as const, // Use 'as const' to ensure the type is recognized correctly
         beginAtZero: true,
       },
       y: {
-        type: "linear", // Ensure the type is correctly specified
+        type: 'linear' as const, // Use 'as const' to ensure the type is recognized correctly
         beginAtZero: true,
       },
     },
@@ -87,6 +87,60 @@ const Dashboard: NextPageWithLayout = () => {
             <Text fontSize="1rem" color="gray.600" mb="4">
               Stock Prices Bar Chart:
             </Text>
+            interface ChartData {
+              labels: string[];
+              datasets: {
+                label: string;
+                data: number[];
+                backgroundColor: string;
+                borderColor: string;
+                borderWidth: number;
+              }[];
+            }
+
+            interface ChartOptions {
+              responsive: boolean;
+              maintainAspectRatio: boolean;
+              scales: {
+                x: {
+                  type: 'category';
+                  beginAtZero: boolean;
+                };
+                y: {
+                  type: 'linear';
+                  beginAtZero: boolean;
+                };
+              };
+            }
+
+            const chartData: ChartData = {
+              labels: stocks.data?.stockData?.map((stock) => stock.ticker) || [],
+              datasets: [
+                {
+                  label: "Close Price",
+                  data: stocks.data?.stockData?.map((stock) => stock.close) || [],
+                  backgroundColor: "rgba(54, 162, 235, 0.6)",
+                  borderColor: "rgba(54, 162, 235, 1)",
+                  borderWidth: 1,
+                },
+              ],
+            };
+
+            const chartOptions: ChartOptions = {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                x: {
+                  type: 'category' as const,
+                  beginAtZero: true,
+                },
+                y: {
+                  type: 'linear' as const,
+                  beginAtZero: true,
+                },
+              },
+            };
+
             <Box
               p="4"
               bg={useColorModeValue("gray.100", "gray.800")}
