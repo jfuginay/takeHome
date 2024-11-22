@@ -130,7 +130,7 @@ export const stockRouter = createTRPCRouter({
 
         // Process the response to store stock-related variables
         interface StockData {
-          quantity: ReactNode;
+          quantity: number;
           symbol: string;
           change: number;
           changePercent: number;
