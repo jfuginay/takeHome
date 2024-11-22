@@ -111,8 +111,10 @@ export const authOptions: NextAuthOptions = {
     Okta({
       clientId: env.AUTH0_CLIENT_ID,
       clientSecret: env.AUTH0_CLIENT_SECRET,
-      issuer: env.AUTH0_ISSUER
+      issuer: env.AUTH0_ISSUER,
+      allowDangerousEmailAccountLinking: true
     }),
+
     /**
      * ...add more providers here.
      *
