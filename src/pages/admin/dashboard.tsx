@@ -41,7 +41,7 @@ const Dashboard: NextPageWithLayout = () => {
             </Box>
           </Flex>
           <Stack overflowY="scroll" pr="1" pb="5" spacing="1rem" mt="4">
-            {stocks.data?.map((stock, idx) => (
+            {stocks.data?.stockData?.map((stock, idx) => (
               <Box
                 key={idx}
                 boxShadow="md"
@@ -50,7 +50,7 @@ const Dashboard: NextPageWithLayout = () => {
                 bg={useColorModeValue("white", "gray.700")}
               >
                 <Text fontSize="1rem" color="gray.600">
-                  <Text as="b">{stock.name || "Unnamed Stock"}</Text>
+                  <Text as="b">{stock.symbol ? stock.symbol : "Unnamed Stock"}</Text>
                 </Text>
                 <Text fontSize="0.9rem" color="gray.500">
                   Quantity: {stock.quantity}
