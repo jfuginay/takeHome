@@ -24,12 +24,12 @@ type AppPropsWithLayout = AppProps & {
   Component: NextPageWithLayout;
 };
 
-const config: ThemeConfig = {
-  initialColorMode: "dark",
-};
-export const theme = extendTheme({
-  config: { ...config },
-});
+// const config: ThemeConfig = {
+//   initialColorMode: "dark",
+// };
+// export const theme = extendTheme({
+//   config: { ...config },
+// });
 
 const MyApp = ({
   Component,
