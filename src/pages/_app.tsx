@@ -39,7 +39,7 @@ const MyApp = ({
 
   return (
     <SessionProvider session={session as Session | null}>
-       <ChakraProvider theme={theme}>
+       <ChakraProvider>
           {getLayout(<Component {...pageProps} />)}
          <ReactQueryDevtools position={'bottom-right'} />
        </ChakraProvider>
