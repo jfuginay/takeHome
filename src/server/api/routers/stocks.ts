@@ -96,13 +96,13 @@ export const stockRouter = createTRPCRouter({
             const activeStockData: ActiveStockData[] = transformActiveStocksResponse(activeStocksResponse.data);
 
             // Fetch volume data for each active stock (assuming a limit)
-            const stockVolumeDataPromises = activeStockData.slice(0, 50).map(stock => fetchStockVolumeData(stock.ticker));
+            const stockVolumeDataPromises = activeStockData.slice(0, 5000).map(stock => fetchStockVolumeData(stock.ticker));
             const stockVolumeData = (await Promise.all(stockVolumeDataPromises)).filter(data => data !== null) as StockData[];
 
             // Sort by volume and take the top 10
-            const top10StocksByVolume = stockVolumeData.sort((a, b) => b.volume - a.volume).slice(0, 10);
+            const top1000StocksByVolume = stockVolumeData.sort((a, b) => b.volume - a.volume).slice(0, 1001);
 
-            return { top10StocksByVolume };
+            return { top1000StocksByVolume };
           } catch (error) {
             console.error(error);
             throw new TRPCError({

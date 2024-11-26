@@ -34,6 +34,7 @@ import { UserRole } from "@prisma/client";
 enum LinkItem {
   dashboard = "dashboard",
   map = "map",
+  charts ="charts",
   list = "list",
   groups = "groups",
   users = "users",
@@ -52,6 +53,12 @@ const LinkItems: Array<LinkItemProps> = [
     name: "Dashboard",
     icon: MdSpaceDashboard,
     url: "/admin/dashboard",
+  },
+  {
+    id: LinkItem.charts,
+    name: "Charts",
+    icon: SiOpenstreetmap,
+    url: "/admin/charts",
   },
   // {
   //   id: LinkItem.map,
@@ -72,6 +79,7 @@ const LinkItems: Array<LinkItemProps> = [
 const displayToRole: { [key: string]: LinkItem[] } = {
   [UserRole.owner]: [
     LinkItem.dashboard,
+      LinkItem.charts,
     LinkItem.map,
     LinkItem.list,
     LinkItem.groups,
@@ -79,6 +87,7 @@ const displayToRole: { [key: string]: LinkItem[] } = {
   ],
   [UserRole.admin]: [
     LinkItem.dashboard,
+      LinkItem.charts,
     LinkItem.map,
     LinkItem.list,
     LinkItem.groups,
@@ -86,6 +95,7 @@ const displayToRole: { [key: string]: LinkItem[] } = {
   ],
   [UserRole.user]: [
     LinkItem.map,
+      LinkItem.charts,
     LinkItem.list],
 };
 

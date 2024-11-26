@@ -44,11 +44,11 @@ const Dashboard: NextPageWithLayout = () => {
 
   // Prepare chart data
   const chartData = {
-    labels: data?.top10StocksByVolume?.map((stock) => stock.ticker) || [],
+    labels: data?.top1000StocksByVolume?.map((stock) => stock.ticker) || [],
     datasets: [
       {
         label: "Trading Volume",
-        data: data?.top10StocksByVolume?.map((stock) => stock.volume) || [],
+        data: data?.top1000StocksByVolume?.map((stock) => stock.volume) || [],
         backgroundColor: "rgba(54, 162, 235, 0.6)",
         borderColor: "rgba(54, 162, 235, 1)",
         borderWidth: 1,
@@ -111,7 +111,7 @@ const Dashboard: NextPageWithLayout = () => {
               </Box>
             </Flex>
             <Stack overflowY="scroll" pr="1" pb="5" spacing="1rem" mt="4">
-              {data?.top10StocksByVolume?.map((stock, idx) => (
+              {data?.top1000StocksByVolume?.map((stock, idx) => (
                   <Box
                       key={idx}
                       boxShadow="md"
