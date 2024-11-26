@@ -33,7 +33,7 @@ const Home: NextPageWithLayout = () => {
   return (
     <>
       <Head>
-        <title>Faith In Five</title>
+        <title>Hedge Pulse</title>
         <meta name="description" content="" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
