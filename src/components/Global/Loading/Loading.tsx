@@ -5,7 +5,7 @@ const Loading = () => {
    <Spinner
      thickness="4px"
      speed="0.65s"
-     emptyColor="teal.400"
+     emptyColor="darkblue.400"
      color=""
      size="xl"
    />

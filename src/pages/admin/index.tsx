@@ -16,7 +16,7 @@ const Admin: NextPageWithLayout = () => {
           <Text
             as={"b"}
             fontSize={{ md: "7xl", base: "5xl" }}
-            color={"teal.400"}
+            color={"darkblue.400"}
           >
             Admin
           </Text>
