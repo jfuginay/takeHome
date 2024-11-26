@@ -39,3 +39,10 @@ export type AddressWithVisits = Prisma.AddressGetPayload<
 export type AddressWithGroupsAndVisits = Prisma.AddressGetPayload<
     typeof addressWithGroupsAndVisits
 >
+
+export type StockData = {
+  quantity: number;
+  symbol: string;
+  change: number;
+  changePercent: number;
+}

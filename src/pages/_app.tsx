@@ -24,12 +24,12 @@ type AppPropsWithLayout = AppProps & {
   Component: NextPageWithLayout;
 };
 
-const config: ThemeConfig = {
-  initialColorMode: "dark",
-};
-export const theme = extendTheme({
-  config: { ...config },
-});
+// const config: ThemeConfig = {
+//   initialColorMode: "dark",
+// };
+// export const theme = extendTheme({
+//   config: { ...config },
+// });
 
 const MyApp = ({
   Component,
@@ -39,7 +39,7 @@ const MyApp = ({
 
   return (
     <SessionProvider session={session as Session | null}>
-       <ChakraProvider theme={theme}>
+       <ChakraProvider>
           {getLayout(<Component {...pageProps} />)}
          <ReactQueryDevtools position={'bottom-right'} />
        </ChakraProvider>
