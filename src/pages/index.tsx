@@ -48,7 +48,7 @@ const Home: NextPageWithLayout = () => {
           <div className="flex flex-col items-center gap-2">
 
             <Button
-              colorScheme="teal"
+              colorScheme="darkblue"
               width="20rem"
               size="md"
               onClick={() => void signIn("okta", { callbackUrl: "/admin/dashboard" })}

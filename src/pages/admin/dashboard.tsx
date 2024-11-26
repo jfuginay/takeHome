@@ -72,57 +72,56 @@ const Dashboard: NextPageWithLayout = () => {
   };
 
   return (
-    <AuthRequired roles={RoleSets.users}>
-      <Flex justifyContent="space-evenly" mt="10" maxH="84.3vh" mx="5">
-        <Flex flexDirection="column" w="100%" px="7">
-          <Flex flexDirection="column">
-            <Heading
-              as="h2"
-              fontSize="1.5rem"
-              fontWeight="semi-bold"
-              color="teal.500"
-            >
-              Stock Dashboard
-            </Heading>
-            <Text fontSize="1rem" color="gray.600" mb="4">
-              Stock Prices Bar Chart:
-            </Text>
-            <Box
-              p="4"
-              bg={useColorModeValue("gray.100", "gray.800")}
-              borderRadius="md"
-              overflowX="auto"
-              height="400px" // Adjust height for better responsiveness
-            >
-              <Chart
-                type="bar" // Specify the chart type
-                data={chartData}
-                options={chartOptions}
-                ref={(ref) => {
-                }}
-              />
-            </Box>
-          </Flex>
-          <Stack overflowY="scroll" pr="1" pb="5" spacing="1rem" mt="4">
-            {stocks.data?.stockData?.map((stock, idx) => (
-              <Box
-                key={idx}
-                boxShadow="md"
-                borderRadius="md"
-                p="3"
-                bg={useColorModeValue("white", "gray.700")}
+      <AuthRequired roles={RoleSets.users}>
+        <Flex justifyContent="space-evenly" mt="10" maxH="84.3vh" mx="5">
+          <Flex flexDirection="column" w="100%" px="7">
+            <Flex flexDirection="column">
+              <Heading
+                  as="h2"
+                  fontSize="1.5rem"
+                  fontWeight="semi-bold"
+                  color={useColorModeValue("gray.800", "gray.100")}
               >
-                <Text fontWeight="bold">{stock.ticker}</Text>
-                <Text>Close: {stock.close}</Text>
-                <Text>Open: {stock.open}</Text>
-                <Text>High: {stock.high}</Text>
-                <Text>Low: {stock.low}</Text>
+                Stock Dashboard
+              </Heading>
+              <Text fontSize="1rem" color={useColorModeValue("gray.600", "gray.400")} mb="4">
+                Stock Prices Bar Chart:
+              </Text>
+              <Box
+                  p="4"
+                  bg={useColorModeValue("gray.100", "gray.800")}
+                  borderRadius="md"
+                  overflowX="auto"
+                  height="400px" // Adjust height for better responsiveness
+              >
+                <Chart
+                    type="bar" // Specify the chart type
+                    data={chartData}
+                    options={chartOptions}
+                    ref={chartRef}
+                />
               </Box>
-            ))}
-          </Stack>
+            </Flex>
+            <Stack overflowY="scroll" pr="1" pb="5" spacing="1rem" mt="4">
+              {stocks.data?.stockData?.map((stock, idx) => (
+                  <Box
+                      key={idx}
+                      boxShadow="md"
+                      borderRadius="md"
+                      p="3"
+                      bg={useColorModeValue("white", "gray.700")}
+                  >
+                    <Text fontWeight="bold">{stock.ticker}</Text>
+                    <Text>Close: {stock.close}</Text>
+                    <Text>Open: {stock.open}</Text>
+                    <Text>High: {stock.high}</Text>
+                    <Text>Low: {stock.low}</Text>
+                  </Box>
+              ))}
+            </Stack>
+          </Flex>
         </Flex>
-      </Flex>
-    </AuthRequired>
+      </AuthRequired>
   );
 };
 

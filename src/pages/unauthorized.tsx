@@ -17,7 +17,7 @@ const Unauthorized: NextPageWithLayout = () => {
           Access denied
         </Text>
 
-        <Text as={"b"} fontSize={{ md: "2xl", base: "xl" }} color={"teal.400"}>
+        <Text as={"b"} fontSize={{ md: "2xl", base: "xl" }} color={"darkblue.400"}>
           Please contact the owner to whitelist your email address.
         </Text>
       </Flex>

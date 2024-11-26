@@ -79,7 +79,7 @@ const AccountPageComponent = () => {
             <Button
               isDisabled={!isDirty || updateCurrentUser.isLoading}
               onClick={handleSubmit(onSubmit)}
-              colorScheme="teal"
+              colorScheme="darkblue"
             >
               Update
             </Button>

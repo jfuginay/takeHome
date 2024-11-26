@@ -43,7 +43,6 @@ interface LinkItemProps {
   id: LinkItem;
   name: string;
   icon: IconType;
-
   url: string;
 }
 
@@ -96,31 +95,31 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const user = api.user.current.useQuery();
 
   return (
-    <Box minH="100vh" bg={useColorModeValue("", "gray.900")}>
-      <SidebarContent
-        role={user.data?.role || UserRole.user}
-        onClose={() => onClose}
-        display={{ base: "none", md: "block" }}
-      />
-      <Drawer
-        autoFocus={false}
-        isOpen={isOpen}
-        placement="left"
-        onClose={onClose}
-        returnFocusOnClose={false}
-        onOverlayClick={onClose}
-        size="full"
-      >
-        <DrawerContent>
-          <SidebarContent
+      <Box minH="100vh" bg={useColorModeValue("gray.100", "gray.900")}>
+        <SidebarContent
             role={user.data?.role || UserRole.user}
+            onClose={() => onClose}
+            display={{ base: "none", md: "block" }}
+        />
+        <Drawer
+            autoFocus={false}
+            isOpen={isOpen}
+            placement="left"
             onClose={onClose}
-          />
-        </DrawerContent>
-      </Drawer>
-      <Navbar onOpen={onOpen} />
-      <Box ml={{ base: 0, md: 60 }}>{children}</Box>
-    </Box>
+            returnFocusOnClose={false}
+            onOverlayClick={onClose}
+            size="full"
+        >
+          <DrawerContent>
+            <SidebarContent
+                role={user.data?.role || UserRole.user}
+                onClose={onClose}
+            />
+          </DrawerContent>
+        </Drawer>
+        <Navbar onOpen={onOpen} />
+        <Box ml={{ base: 0, md: 60 }}>{children}</Box>
+      </Box>
   );
 }
 
@@ -131,81 +130,80 @@ interface SidebarProps extends BoxProps {
 
 const SidebarContent = ({ onClose, role, ...rest }: SidebarProps) => {
   return (
-    <Box
-      transition="3s ease"
-      bg={useColorModeValue("white", "gray.900")}
-      borderRight="1px"
-      borderRightColor={useColorModeValue("gray.200", "gray.700")}
-      w={{ base: "full", md: 60 }}
-      pos="fixed"
-      h="full"
-      {...rest}
-    >
-      <Flex h="20" alignItems="center" mx="8" justifyContent="space-between">
-        <CloseButton display={{ base: "flex", md: "none" }} onClick={onClose} />
-      </Flex>
-      {LinkItems.filter((item) =>
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        displayToRole[role || UserRole.user].includes(item.id)
-      ).map((link) => (
-        <Link key={link.name} href={link.url}>
-          <NavItem onClick={onClose} icon={link.icon}>
-            {link.name}
-          </NavItem>
-        </Link>
-      ))}
-      <Flex w={"full"} pos="absolute" bottom={0} direction={"column"}>
-        <Link href={"/admin/account"}>
-          <NavItem onClick={onClose} icon={MdAccountCircle} w="90%">
-            My Account
-          </NavItem>
-        </Link>
+      <Box
+          transition="3s ease"
+          bg={useColorModeValue("white", "gray.900")}
+          borderRight="1px"
+          borderRightColor={useColorModeValue("gray.200", "gray.700")}
+          w={{ base: "full", md: 60 }}
+          pos="fixed"
+          h="full"
+          {...rest}
+      >
+        <Flex h="20" alignItems="center" mx="8" justifyContent="space-between">
+          <CloseButton display={{ base: "flex", md: "none" }} onClick={onClose} />
+        </Flex>
+        {LinkItems.filter((item) =>
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            displayToRole[role || UserRole.user].includes(item.id)
+        ).map((link) => (
+            <Link key={link.name} href={link.url}>
+              <NavItem onClick={onClose} icon={link.icon}>
+                {link.name}
+              </NavItem>
+            </Link>
+        ))}
+        <Flex w={"full"} pos="absolute" bottom={0} direction={"column"}>
+          <Link href={"/admin/account"}>
+            <NavItem onClick={onClose} icon={MdAccountCircle} w="90%">
+              My Account
+            </NavItem>
+          </Link>
 
-        <NavItem
-          onClick={() => void signOut({ callbackUrl: "/" })}
-          icon={MdExitToApp}
-          w="90%"
-        >
-          Logout
-        </NavItem>
-      </Flex>
-    </Box>
+          <NavItem
+              onClick={() => void signOut({ callbackUrl: "/" })}
+              icon={MdExitToApp}
+              w="90%"
+          >
+            Logout
+          </NavItem>
+        </Flex>
+      </Box>
   );
 };
 
 interface NavItemProps extends FlexProps {
   icon?: IconType;
-
   children: ReactText;
 }
 const NavItem = ({ icon, children, ...rest }: NavItemProps) => {
   return (
-    <Flex
-      align="center"
-      p="4"
-      mx="4"
-      borderRadius="lg"
-      role="group"
-      cursor="pointer"
-      _hover={{
-        bg: "teal.400",
-        color: "black",
-      }}
-      {...rest}
-    >
-      {icon && (
-        <Icon
-          mr="4"
-          fontSize="20"
-          _groupHover={{
+      <Flex
+          align="center"
+          p="4"
+          mx="4"
+          borderRadius="lg"
+          role="group"
+          cursor="pointer"
+          _hover={{
+            bg: "darkblue.400",
             color: "black",
           }}
-          as={icon}
-        />
-      )}
-      {children}
-    </Flex>
+          {...rest}
+      >
+        {icon && (
+            <Icon
+                mr="4"
+                fontSize="20"
+                _groupHover={{
+                  color: "black",
+                }}
+                as={icon}
+            />
+        )}
+        {children}
+      </Flex>
   );
 };
 
@@ -214,42 +212,42 @@ interface MobileProps extends FlexProps {
 }
 const Navbar = ({ onOpen, ...rest }: MobileProps) => {
   return (
-    <Flex
-      ml={{ base: 0, md: 60 }}
-      pl={{ base: 4, md: 4 }}
-      height="20"
-      alignItems="center"
-      bg={"teal.500"}
-      borderBottomWidth="1px"
-      borderBottomColor={useColorModeValue("gray.200", "gray.700")}
-      justifyContent={{ base: "space-between" }}
-      {...rest}
-    >
-      <IconButton
-        display={{ base: "flex", md: "none" }}
-        onClick={onOpen}
-        aria-label="open menu"
-        icon={<FiMenu />}
-      />
       <Flex
-        w="full"
-        justifyContent={{ md: "space-between", base: "center" }}
-        alignItems={"center"}
+          ml={{ base: 0, md: 60 }}
+          pl={{ base: 4, md: 4 }}
+          height="20"
+          alignItems="center"
+          bg={useColorModeValue("white", "gray.800")}
+          borderBottomWidth="1px"
+          borderBottomColor={useColorModeValue("gray.200", "gray.700")}
+          justifyContent={{ base: "space-between" }}
+          {...rest}
       >
-        <Text
-          display={{ base: "none", md: "inline-block" }}
-          as="b"
-          fontSize="3xl"
-          color={"white"}
-        >
-          HedgePulse
-        </Text>
-
-        <img
-          src={"/hedgepulse.png"}
-          alt={"No Logo"}
+        <IconButton
+            display={{ base: "flex", md: "none" }}
+            onClick={onOpen}
+            aria-label="open menu"
+            icon={<FiMenu />}
         />
+        <Flex
+            w="full"
+            justifyContent={{ md: "space-between", base: "center" }}
+            alignItems={"center"}
+        >
+          <Text
+              display={{ base: "none", md: "inline-block" }}
+              as="b"
+              fontSize="3xl"
+              color={"white"}
+          >
+            HedgePulse
+          </Text>
+
+          <img
+              src={"/hedgepulse.png"}
+              alt={"No Logo"}
+          />
+        </Flex>
       </Flex>
-    </Flex>
   );
 };
