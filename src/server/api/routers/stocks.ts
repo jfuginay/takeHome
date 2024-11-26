@@ -4,193 +4,117 @@ import axios from "axios";
 import { env } from "~/env.mjs";
 import { TRPCError } from "@trpc/server";
 
+// Shared StockData interface
+interface StockData {
+  ticker: string;
+  name: string;
+  volume: number;
+}
+
+// Shared Stock interface for active stocks
+interface ActiveStockData {
+  ticker: string;
+  name: string;
+  market: string;
+  locale: string;
+  primary_exchange: string;
+  type: string;
+  active: boolean;
+  currency_name: string;
+  last_updated_utc: string;
+}
+
+const transformActiveStocksResponse = (data: any): ActiveStockData[] => {
+  return data.results.map((stock: any) => ({
+    ticker: stock.ticker,
+    name: stock.name,
+    market: stock.market,
+    locale: stock.locale,
+    primary_exchange: stock.primary_exchange,
+    type: stock.type,
+    active: stock.active,
+    currency_name: stock.currency_name,
+    last_updated_utc: stock.last_updated_utc,
+  }));
+};
+
+// Fetch historical data for each stock to get the volume
+const fetchStockVolumeData = async (ticker: string): Promise<StockData | null> => {
+  try {
+    const response = await axios.get(
+        `https://api.polygon.io/v2/aggs/ticker/${ticker}/prev`,
+        {
+          params: {
+            apiKey: env.POLYGON_API_KEY,
+          },
+        }
+    );
+
+    if (response.data && response.data.results && response.data.results[0]) {
+      const stockData = response.data.results[0];
+      return {
+        ticker,
+        name: ticker, // Assuming the name is the same as the ticker
+        volume: stockData.v,
+      };
+    }
+
+    return null;
+  } catch (error) {
+    console.error(`Failed to fetch volume data for ${ticker}:`, error);
+    return null;
+  }
+};
+
 export const stockRouter = createTRPCRouter({
-  create: protectedProcedure
-    .input(
-      z.object({
-        strikePriceMin: z.number(),
-        strikePriceMax: z.number(),
-        expirationDate: z.string(),
-        limit: z.number().default(250),
-      })
-    )
-    .mutation(async ({ input }) => {
-      try {
-        const response = await axios.get(
-          `https://api.polygon.io/v3/snapshot/options/SPY`, 
-          {
-            params: {
-              'strike_price.gte': input.strikePriceMin,
-              'strike_price.lte': input.strikePriceMax,
-              'expiration_date.lte': input.expirationDate,
-              limit: input.limit,
-              sort: 'expiration_date',
-              apiKey: env.POLYGON_API_KEY as string,
-            },
-          }
-        );
-
-        // Check if the response data is valid
-        if (!response.data || response.data.results.length === 0) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "No options found for the given criteria",
-          });
-        }
-
-        // Process the response to store stock-related variables
-        interface StockData {
-          change: number;
-          changePercent: number;
-          close: number;
-          high: number;
-          low: number;
-          open: number;
-          previousClose: number;
-          volume: number;
-          vwap: number;
-          contractType: string;
-          exerciseStyle: string;
-          expirationDate: string;
-          sharesPerContract: number;
-          strikePrice: number;
-          ticker: string;
-          impliedVolatility: number;
-          openInterest: number;
-          underlyingAssetTicker: string;
-          greeks: {
-            delta: number;
-            gamma: number;
-            theta: number;
-            vega: number;
-          };
-        }
-
-        const stockData: StockData[] = response.data.results.map((option: any) => ({
-          change: option.day.change,
-          changePercent: option.day.change_percent,
-          close: option.day.close,
-          high: option.day.high,
-          low: option.day.low,
-          open: option.day.open,
-          previousClose: option.day.previous_close,
-          volume: option.day.volume,
-          vwap: option.day.vwap,
-          contractType: option.details.contract_type,
-          exerciseStyle: option.details.exercise_style,
-          expirationDate: option.details.expiration_date,
-          sharesPerContract: option.details.shares_per_contract,
-          strikePrice: option.details.strike_price,
-          ticker: option.details.ticker,
-          impliedVolatility: option.implied_volatility,
-          openInterest: option.open_interest,
-          underlyingAssetTicker: option.underlying_asset.ticker,
-          greeks: {
-            delta: option.greeks.delta,
-            gamma: option.greeks.gamma,
-            theta: option.greeks.theta,
-            vega: option.greeks.vega,
-          },
-        }));
-
-        // Return the stock options
-        return {
-          stockData,
-        };
-      } catch (error) {
-        console.error(error);
-        console.log('error', error);
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "An error occurred while fetching stock options",
-        });
-      }
-    }),
-
   getStockData: protectedProcedure
-    .query(async () => {
-      try {
-        const response = await axios.get(
-          `https://api.polygon.io/v3/snapshot/options/SPY`, 
-          {
-            params: {
-              apiKey: env.POLYGON_API_KEY as string,
-            },
-          }
-        );
+      .input(
+          z.object({
+            dataType: z.enum(["activeStocks"]).default("activeStocks"),
+          })
+      )
+      .query(async ({ input }) => {
+        if (input.dataType === "activeStocks") {
+          try {
+            const activeStocksResponse = await axios.get(
+                `https://api.polygon.io/v3/reference/tickers`,
+                {
+                  params: {
+                    apiKey: env.POLYGON_API_KEY,
+                    active: true,
+                  },
+                }
+            );
 
-        // Check if the response data is valid
-        if (!response.data || response.data.results.length === 0) {
+            if (!activeStocksResponse.data || activeStocksResponse.data.results.length === 0) {
+              throw new TRPCError({
+                code: "BAD_REQUEST",
+                message: "No active stock data found",
+              });
+            }
+
+            const activeStockData: ActiveStockData[] = transformActiveStocksResponse(activeStocksResponse.data);
+
+            // Fetch volume data for each active stock (assuming a limit)
+            const stockVolumeDataPromises = activeStockData.slice(0, 50).map(stock => fetchStockVolumeData(stock.ticker));
+            const stockVolumeData = (await Promise.all(stockVolumeDataPromises)).filter(data => data !== null) as StockData[];
+
+            // Sort by volume and take the top 10
+            const top10StocksByVolume = stockVolumeData.sort((a, b) => b.volume - a.volume).slice(0, 10);
+
+            return { top10StocksByVolume };
+          } catch (error) {
+            console.error(error);
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: "An error occurred while fetching stock data",
+            });
+          }
+        } else {
           throw new TRPCError({
             code: "BAD_REQUEST",
-            message: "No stock data found",
+            message: "Invalid data type",
           });
         }
-
-        // Process the response to store stock-related variables
-        interface StockData {
-          change: number;
-          changePercent: number;
-          close: number;
-          high: number;
-          low: number;
-          open: number;
-          previousClose: number;
-          volume: number;
-          vwap: number;
-          contractType: string;
-          exerciseStyle: string;
-          expirationDate: string;
-          sharesPerContract: number;
-          strikePrice: number;
-          ticker: string;
-          impliedVolatility: number;
-          openInterest: number;
-          underlyingAssetTicker: string;
-          greeks: {
-            delta: number;
-            gamma: number;
-            theta: number;
-            vega: number;
-          };
-        }
-
-        const stockData: StockData[] = response.data.results.map((option: any) => ({
-          change: option.day.change,
-          changePercent: option.day.change_percent,
-          close: option.day.close,
-          high: option.day.high,
-          low: option.day.low,
-          open: option.day.open,
-          previousClose: option.day.previous_close,
-          volume: option.day.volume,
-          vwap: option.day.vwap,
-          contractType: option.details.contract_type,
-          exerciseStyle: option.details.exercise_style,
-          expirationDate: option.details.expiration_date,
-          sharesPerContract: option.details.shares_per_contract,
-          strikePrice: option.details.strike_price,
-          ticker: option.details.ticker,
-          impliedVolatility: option.implied_volatility,
-          openInterest: option.open_interest,
-          underlyingAssetTicker: option.underlying_asset.ticker,
-          greeks: {
-            delta: option.greeks.delta,
-            gamma: option.greeks.gamma,
-            theta: option.greeks.theta,
-            vega: option.greeks.vega,
-          },
-        }));
-
-        // Return the stock data
-        return {
-          stockData,
-        };
-      } catch (error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "An error occurred while fetching stock data",
-        });
-      }
-    }),
+      }),
 });
