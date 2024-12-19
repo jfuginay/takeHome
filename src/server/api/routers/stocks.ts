@@ -26,6 +26,11 @@ interface ActiveStockData {
   last_updated_utc: string;
 }
 
+const createAbortableRequest = async <T>(callback: (controller: AbortController) => Promise<T>): Promise<T> => {
+  const controller = new AbortController();
+  return callback(controller);
+};
+
 // Fetch historical data for each stock
 const fetchOptionAggregateData = async (
   optionTicker: string,
@@ -36,7 +41,7 @@ const fetchOptionAggregateData = async (
 ): Promise<StockData | null> => {
   try {
     const data = await createAbortableRequest(
-      (controller) =>
+      () =>
         rest.options.aggregates(
           optionTicker,
           multiplier,

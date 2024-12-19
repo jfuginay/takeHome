@@ -44,6 +44,7 @@ const Dashboard: NextPageWithLayout = () => {
   const { data, isLoading, error } = api.stock.getOptionsData.useQuery({
     optionTicker,
     from: "2023-01-09",
+    from: "2023-01-09",
     to: "2023-01-09"
   });
 
@@ -60,14 +61,22 @@ const Dashboard: NextPageWithLayout = () => {
   }, []);
 
   // Prepare chart data
+  const fallbackData: StockData[] = [
+    { ticker: "AAPL", volume: 1000 },
+    { ticker: "GOOGL", volume: 1500 },
+  ];
+
   const chartData = {
-    labels: data?.map((item: StockData) =>
-      item.ticker ? item.ticker : "Unknown Ticker"
-    ) || ["Unknown Ticker"],
+
+    labels: (data?.length ? data : fallbackData).map((item: StockData) =>
+      item.ticker || "Unknown Ticker"
+    ),
     datasets: [
       {
         label: "Volume",
-        data: data?.map((item: StockData) => item.volume ?? 0) || [0],
+        data: (data?.length ? data : fallbackData).map((item: StockData) =>
+          item.volume ?? 0
+        ),
         backgroundColor: "rgba(75, 192, 192, 0.6)",
         borderColor: "rgba(75, 192, 192, 1)",
         borderWidth: 1,
@@ -99,7 +108,11 @@ const Dashboard: NextPageWithLayout = () => {
   }
 
   if (error) {
-    return <Text color="red.500">Error loading data: {JSON.stringify(error.message)}</Text>;
+    return (
+      <Text color="red.500">
+        Unable to fetch data. Please try again later. Error: {error.message || "Unknown error."}
+      </Text>
+    );
   }
 
   return (
