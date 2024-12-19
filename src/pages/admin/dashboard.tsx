@@ -21,6 +21,7 @@ import {
 import { Chart } from "react-chartjs-2";
 import { useRef, useEffect } from "react";
 import { api } from "~/utils/api";
+import { StockData } from "~/types";
 
 // Define the interface for the data item
 interface AggregateResult {
@@ -60,13 +61,13 @@ const Dashboard: NextPageWithLayout = () => {
 
   // Prepare chart data
   const chartData = {
-    labels: data?.results?.map((item: AggregateResult) =>
-      item.t ? new Date(item.t).toLocaleDateString() : "Unknown Date"
-    ) || ["Jan 9"],
+    labels: data?.map((item: StockData) =>
+      item.ticker ? item.ticker : "Unknown Ticker"
+    ) || ["Unknown Ticker"],
     datasets: [
       {
         label: "Volume",
-        data: data?.results?.map((item: AggregateResult) => item.v ?? 0) || [0],
+        data: data?.map((item: StockData) => item.volume ?? 0) || [0],
         backgroundColor: "rgba(75, 192, 192, 0.6)",
         borderColor: "rgba(75, 192, 192, 1)",
         borderWidth: 1,
