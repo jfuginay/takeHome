@@ -12,6 +12,18 @@ interface StockData {
   ticker: string;
   name: string;
   volume: number;
+  chartData: ChartData[];
+}
+
+interface ChartData {
+  close: number;
+  high: number;
+  low: number;
+  open: number;
+  time: number;
+  volume: number;
+  volumeWeighted: number;
+  transactions: number;
 }
 
 interface ActiveStockData {
@@ -51,19 +63,34 @@ const fetchOptionAggregateData = async (
         )
     );
 
-    if (!data || !data.results || data.results.length === 0) {
-      return null;
+if (!data || !Array.isArray(data.results) || data.results.length === 0) {
+  return {
+    ticker: optionTicker,
+    name: optionTicker,
+    volume: 0,
+    chartData: []
+  };
     }
 
-    const totalVolume = data.results.reduce((sum: number, result) => {
-      return sum + (result.v ?? 0);
-    }, 0);
+const transformedData = data.results.map((result) => ({
+  close: result.c ?? 0,
+  high: result.h ?? 0,
+  low: result.l ?? 0,
+  open: result.o ?? 0,
+  time: result.t ?? 0,
+  volume: result.v ?? 0,
+  volumeWeighted: result.vw ?? 0,
+  transactions: result.n ?? 0,
+}));
 
-    return {
-      ticker: optionTicker,
-      name: optionTicker,
-      volume: totalVolume
-    };
+const totalVolume = transformedData.reduce((sum, entry) => sum + entry.volume, 0);
+
+return {
+  ticker: optionTicker,
+  name: optionTicker,
+  volume: totalVolume,
+  chartData: transformedData
+};
   } catch (e) {
     console.error(`Failed to fetch options data for ${optionTicker}:`, e);
     return null;

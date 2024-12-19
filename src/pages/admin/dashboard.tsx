@@ -21,13 +21,12 @@ import {
 import { Chart } from "react-chartjs-2";
 import { useRef, useEffect } from "react";
 import { api } from "~/utils/api";
-import { StockData } from "~/types";
 
-// Define the interface for the data item
+// Define interfaces based on the actual API response
 interface AggregateResult {
   t: number;  // timestamp
-  v?: number; // volume
-  vw?: number; // volume weighted average
+  v: number;  // volume
+  vw: number; // volume weighted average
   o: number;  // open
   c: number;  // close
   h: number;  // high
@@ -35,23 +34,30 @@ interface AggregateResult {
   n: number;  // number of transactions
 }
 
-// Register all required components for Chart.js
+interface ApiResponse {
+  adjusted: boolean;
+  count: number;
+  queryCount: number;
+  request_id: string;
+  results: AggregateResult[];
+  resultsCount: number;
+  status: string;
+  ticker: string;
+}
+
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const Dashboard: NextPageWithLayout = () => {
-  // Fetch stock or options data
-  const optionTicker = "O:AAPL230519C00150000"; // Use proper option ticker format
-  const { data, isLoading, error } = api.stock.getOptionsData.useQuery({
+  const optionTicker = "O:AAPL230519C00150000";
+  const { data, isLoading, error } = api.stock.getOptionsData.useQuery<ApiResponse>({
     optionTicker,
     from: "2023-01-09",
     to: "2023-01-09",
   });
 
-  // Chart ref for lifecycle management
   const chartRef = useRef<ChartJS | null>(null);
 
   useEffect(() => {
-    // Cleanup chart instance when component unmounts
     return () => {
       if (chartRef.current) {
         chartRef.current = null;
@@ -59,23 +65,18 @@ const Dashboard: NextPageWithLayout = () => {
     };
   }, []);
 
-  // Prepare chart data
-  const fallbackData: StockData[] = [
-    { ticker: "AAPL", volume: 1000 },
-    { ticker: "GOOGL", volume: 1500 },
-  ];
+  const fallbackData: AggregateResult[] = [];
+
+  const results = data?.results || fallbackData;
 
   const chartData = {
-
-    labels: (data?.length ? data : fallbackData).map((item: StockData) =>
-      item.ticker || "Unknown Ticker"
+    labels: results.map((item) =>
+      new Date(item.t).toLocaleDateString()
     ),
     datasets: [
       {
         label: "Volume",
-        data: (data?.length ? data : fallbackData).map((item: StockData) =>
-          item.volume ?? 0
-        ),
+        data: results.map((item) => item.v),
         backgroundColor: "rgba(75, 192, 192, 0.6)",
         borderColor: "rgba(75, 192, 192, 1)",
         borderWidth: 1,
@@ -109,7 +110,8 @@ const Dashboard: NextPageWithLayout = () => {
   if (error) {
     return (
       <Text color="red.500">
-        Unable to fetch data. Please try again later. Error: {error.message || "Unknown error."}
+        Unable to fetch data. Please try again later. Error:{" "}
+        {error.message || "Unknown error."}
       </Text>
     );
   }
@@ -124,7 +126,7 @@ const Dashboard: NextPageWithLayout = () => {
             fontWeight="semi-bold"
             color={useColorModeValue("gray.800", "gray.100")}
           >
-            Options Dashboard
+            Options Dashboard {data?.ticker && `- ${data.ticker}`}
           </Heading>
           <Box
             p="4"
