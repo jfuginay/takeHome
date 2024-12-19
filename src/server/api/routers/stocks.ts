@@ -2,6 +2,7 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { env } from "~/env.mjs";
 import { TRPCError } from "@trpc/server";
+import type { AggregationResult } from "@polygon.io/client-js";
 import { restClient } from '@polygon.io/client-js';
 
 // Initialize the Polygon client
@@ -35,13 +36,14 @@ interface PolygonResponse {
 
 // Helper function to create an abortable fetch request
 const createAbortableRequest = <T>(
-  apiCall: () => Promise<T>,
-  timeoutMs: number = 8000
-): Promise<T> => {
+  apiCall: (options: { signal: AbortSignal }) => Promise<T>,
+  timeoutMs = 8000
+): Promise<T | null> => {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-  return apiCall()
+  return apiCall({ signal: controller.signal })
+    .catch(() => null)
     .finally(() => clearTimeout(timeoutId));
 };
 
@@ -54,22 +56,24 @@ const fetchOptionAggregateData = async (
   to: string = "2023-01-09"
 ): Promise<StockData | null> => {
   try {
-    const data = await createAbortableRequest(() =>
-      rest.options.aggregates(
-        optionTicker,
-        multiplier,
-        timespan,
-        from,
-        to
-      )
+    const data = await createAbortableRequest(
+      ({ signal }) =>
+        rest.options.aggregates(
+          optionTicker,
+          multiplier,
+          timespan,
+          from,
+          to,
+          { signal }
+        )
     );
 
-    if (!data.results || data.results.length === 0) {
+    if (!data || !data.results || data.results.length === 0) {
       return null;
     }
 
     // Calculate total volume from results
-    const totalVolume = data.results.reduce((sum, day) => sum + (day.v || 0), 0);
+    const totalVolume = data.results.reduce((sum: number, day: AggregationResult) => sum + (day.v || 0), 0);
 
     return {
       ticker: optionTicker,
@@ -94,61 +98,53 @@ export const stockRouter = createTRPCRouter({
       })
     )
     .query(async ({ input }) => {
-      if (input.dataType === "activeStocks") {
-        try {
-          const response = await createAbortableRequest(() =>
+      try {
+        const response = await createAbortableRequest(
+          ({ signal }) =>
             rest.reference.tickers({
-              active: true,
               limit: input.limit,
-              market: "stocks"
+              market: "stocks" as const,
+              signal
             })
-          );
+        );
 
-          if (!response || !response.results) {
-            throw new TRPCError({
-              code: "BAD_REQUEST",
-              message: "No active stock data found",
-            });
-          }
-
-          const activeStockData = response.results;
-
-          // Fetch volume data for each active stock
-          const stockVolumeDataPromises = activeStockData.map(stock =>
-            fetchOptionAggregateData(
-              stock.ticker,
-              1,
-              "day",
-              input.from || "2023-01-09",
-              input.to || "2023-01-09"
-            )
-          );
-
-          const stockVolumeData = (await Promise.all(stockVolumeDataPromises))
-            .filter((data): data is StockData => data !== null);
-
-          // Sort by volume and take top stocks based on limit
-          const topStocksByVolume = stockVolumeData
-            .sort((a, b) => b.volume - a.volume)
-            .slice(0, input.limit);
-
-          return {
-            stocks: topStocksByVolume,
-            count: topStocksByVolume.length
-          };
-        } catch (error) {
-          console.error(error);
+        if (!response || !response.results || response.results.length === 0) {
           throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: error instanceof Error ? error.message : "An error occurred while fetching stock data",
+            code: "BAD_REQUEST",
+            message: "No active stock data found",
           });
         }
-      }
 
-      throw new TRPCError({
-        code: "BAD_REQUEST",
-        message: "Invalid data type",
-      });
+        const activeStockData: ActiveStockData[] = response.results;
+
+        // Fetch volume data for each active stock
+        const stockVolumeDataPromises = activeStockData.map(stock =>
+          fetchOptionAggregateData(
+            stock.ticker,
+            1,
+            "day",
+            input.from || "2023-01-09",
+            input.to || "2023-01-09"
+          )
+        );
+
+        const stockVolumeData = (await Promise.all(stockVolumeDataPromises))
+          .filter((data): data is StockData => data !== null);
+
+        const topStocksByVolume: StockData[] = stockVolumeData
+          .slice(0, input.limit);
+
+        return {
+          stocks: topStocksByVolume,
+          count: topStocksByVolume.length
+        };
+      } catch (error) {
+        console.error(error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: error instanceof Error ? error.message : "An error occurred while fetching stock data",
+        });
+      }
     }),
 
   // Get options data for a specific ticker
@@ -164,24 +160,30 @@ export const stockRouter = createTRPCRouter({
     )
     .query(async ({ input }) => {
       try {
-        const data = await createAbortableRequest(() =>
+        const data = await createAbortableRequest(({ signal }) =>
           rest.options.aggregates(
-            input.ticker,
+            input.ticker.toUpperCase(),
             input.multiplier,
             input.timespan,
             input.from,
-            input.to
+            input.to,
+            { signal }
           )
         );
 
-        if (!data || !data.results) {
+        if (!data || !data.results || data.results.length === 0) {
           throw new TRPCError({
             code: "NOT_FOUND",
             message: "No options data found for the specified ticker",
           });
         }
 
-        return data;
+        return {
+          results: data.results,
+          status: data.status,
+          requestId: data.request_id,
+          count: data.count
+        };
       } catch (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
