@@ -33,27 +33,26 @@ interface PolygonResponse {
   count?: number;
 }
 
-// Define the aggregation result interface based on Polygon.io's actual response structure
 interface AggregateResult {
-  v: number;        // volume
-  vw?: number;      // volume weighted average price
-  o: number;        // open price
-  c: number;        // close price
-  h: number;        // high price
-  l: number;        // low price
-  t: number;        // timestamp
-  n: number;        // number of transactions
+  v: number;
+  vw?: number;
+  o: number;
+  c: number;
+  h: number;
+  l: number;
+  t: number;
+  n: number;
 }
 
 // Helper function to create an abortable fetch request
 const createAbortableRequest = <T>(
-  apiCall: (options: { signal: AbortSignal }) => Promise<T>,
+  apiCall: (controller: AbortController) => Promise<T>,
   timeoutMs = 8000
 ): Promise<T | null> => {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-  return apiCall({ signal: controller.signal })
+  return apiCall(controller)
     .catch(() => null)
     .finally(() => clearTimeout(timeoutId));
 };
@@ -68,14 +67,13 @@ const fetchOptionAggregateData = async (
 ): Promise<StockData | null> => {
   try {
     const data = await createAbortableRequest(
-      ({ signal }) =>
+      (controller) =>
         rest.options.aggregates(
           optionTicker,
           multiplier,
           timespan,
           from,
-          to,
-          { signal }
+          to
         )
     );
 
@@ -83,12 +81,11 @@ const fetchOptionAggregateData = async (
       return null;
     }
 
-    // Calculate total volume from results
     const totalVolume = data.results.reduce((sum: number, day: AggregateResult) => sum + (day.v || 0), 0);
 
     return {
       ticker: optionTicker,
-      name: optionTicker, // Option contracts don't have names like stocks
+      name: optionTicker,
       volume: totalVolume
     };
   } catch (e) {
@@ -98,7 +95,6 @@ const fetchOptionAggregateData = async (
 };
 
 export const stockRouter = createTRPCRouter({
-  // Get active stocks with volume data
   getStockData: protectedProcedure
     .input(
       z.object({
@@ -111,11 +107,10 @@ export const stockRouter = createTRPCRouter({
     .query(async ({ input }) => {
       try {
         const response = await createAbortableRequest(
-          ({ signal }) =>
+          (controller) =>
             rest.reference.tickers({
               limit: input.limit,
-              market: "stocks" as const,
-              signal
+              market: "stocks" as const
             })
         );
 
@@ -128,7 +123,6 @@ export const stockRouter = createTRPCRouter({
 
         const activeStockData: ActiveStockData[] = response.results;
 
-        // Fetch volume data for each active stock
         const stockVolumeDataPromises = activeStockData.map(stock =>
           fetchOptionAggregateData(
             stock.ticker,
@@ -158,7 +152,6 @@ export const stockRouter = createTRPCRouter({
       }
     }),
 
-  // Get options data for a specific ticker
   getOptionsData: protectedProcedure
     .input(
       z.object({
@@ -171,14 +164,13 @@ export const stockRouter = createTRPCRouter({
     )
     .query(async ({ input }) => {
       try {
-        const data = await createAbortableRequest(({ signal }) =>
+        const data = await createAbortableRequest((controller) =>
           rest.options.aggregates(
             input.ticker.toUpperCase(),
             input.multiplier,
             input.timespan,
             input.from,
-            input.to,
-            { signal }
+            input.to
           )
         );
 
