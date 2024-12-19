@@ -1,28 +1,19 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import axios from "axios";
 import { env } from "~/env.mjs";
 import { TRPCError } from "@trpc/server";
 import { restClient } from '@polygon.io/client-js';
-const rest = restClient(process.env.POLY_API_KEY);
 
-rest.options
-  .aggregates("AAPL", 1, "day", "2023-01-01", "2023-04-14")
-  .then((data) => {
-    console.log("Options Aggregate Data:", data);
-  })
-  .catch((e) => {
-    console.error("An error happened:", e);
-  });
+// Initialize the Polygon client
+const rest = restClient(env.POLYGON_API_KEY);
 
-// Shared StockData interface
+// Interfaces
 interface StockData {
   ticker: string;
   name: string;
   volume: number;
 }
 
-// Shared Stock interface for active stocks
 interface ActiveStockData {
   ticker: string;
   name: string;
@@ -35,82 +26,169 @@ interface ActiveStockData {
   last_updated_utc: string;
 }
 
-class stock {
-  results: ActiveStockData[] | undefined;
+interface PolygonResponse {
+  results: ActiveStockData[];
+  status: string;
+  request_id: string;
+  count?: number;
 }
 
-const transformActiveStocksResponse = (data: stock): ActiveStockData[] => {
-  return data.results || [];
+// Helper function to create an abortable fetch request
+const createAbortableRequest = <T>(
+  apiCall: () => Promise<T>,
+  timeoutMs: number = 8000
+): Promise<T> => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  return apiCall()
+    .finally(() => clearTimeout(timeoutId));
 };
 
-// Fetch historical data for each stock to get the volume
-const fetchStockVolumeData = async (ticker: string): Promise<StockData | null> => {
+// Fetch historical data for each stock
+const fetchOptionAggregateData = async (
+  optionTicker: string,
+  multiplier: number = 1,
+  timespan: string = "day",
+  from: string = "2023-01-09",
+  to: string = "2023-01-09"
+): Promise<StockData | null> => {
   try {
-    const response = await axios.get(
-        `https://api.polygon.io/v2/aggs/ticker/${ticker}/prev`,
-        {
-          params: {
-            apiKey: env.POLYGON_API_KEY,
-          },
-        }
+    const data = await createAbortableRequest(() =>
+      rest.options.aggregates(
+        optionTicker,
+        multiplier,
+        timespan,
+        from,
+        to
+      )
     );
 
-    return null;
-  } catch (error) {
-    console.error(`Failed to fetch volume data for ${ticker}:`, error);
+    if (!data.results || data.results.length === 0) {
+      return null;
+    }
+
+    // Calculate total volume from results
+    const totalVolume = data.results.reduce((sum, day) => sum + (day.v || 0), 0);
+
+    return {
+      ticker: optionTicker,
+      name: optionTicker, // Option contracts don't have names like stocks
+      volume: totalVolume
+    };
+  } catch (e) {
+    console.error(`Failed to fetch options data for ${optionTicker}:`, e);
     return null;
   }
 };
 
 export const stockRouter = createTRPCRouter({
+  // Get active stocks with volume data
   getStockData: protectedProcedure
-      .input(
-          z.object({
-            dataType: z.enum(["activeStocks"]).default("activeStocks"),
-          })
-      )
-      .query(async ({ input }) => {
-        if (input.dataType === "activeStocks") {
-          try {
-            const activeStocksResponse = await axios.get(
-                `https://api.polygon.io/v3/reference/tickers`,
-                {
-                  params: {
-                    apiKey: env.POLYGON_API_KEY,
-                    active: true,
-                  },
-                }
-            );
+    .input(
+      z.object({
+        dataType: z.enum(["activeStocks"]).default("activeStocks"),
+        limit: z.number().min(1).max(1000).default(100),
+        from: z.string().optional(),
+        to: z.string().optional(),
+      })
+    )
+    .query(async ({ input }) => {
+      if (input.dataType === "activeStocks") {
+        try {
+          const response = await createAbortableRequest(() =>
+            rest.reference.tickers({
+              active: true,
+              limit: input.limit,
+              market: "stocks"
+            })
+          );
 
-            if (!activeStocksResponse.data) {
-              throw new TRPCError({
-                code: "BAD_REQUEST",
-                message: "No active stock data found",
-              });
-            }
-
-            const activeStockData: ActiveStockData[] = transformActiveStocksResponse(activeStocksResponse.data);
-
-            // Fetch volume data for each active stock (assuming a limit)
-            const stockVolumeDataPromises = activeStockData.slice(0, 5000).map(stock => fetchStockVolumeData(stock.ticker));
-            const stockVolumeData = (await Promise.all(stockVolumeDataPromises)).filter(data => data !== null) as StockData[];
-
-            // Sort by volume and take the top 10
-            const top1000StocksByVolume = stockVolumeData.sort((a, b) => b.volume - a.volume).slice(0, 1001);
-
-            return { top1000StocksByVolume };
-          } catch (error) {
-            console.error(error);
+          if (!response || !response.results) {
             throw new TRPCError({
-              code: "INTERNAL_SERVER_ERROR",
-              message: "An error occurred while fetching stock data",
+              code: "BAD_REQUEST",
+              message: "No active stock data found",
             });
           }
-        } else {
+
+          const activeStockData = response.results;
+
+          // Fetch volume data for each active stock
+          const stockVolumeDataPromises = activeStockData.map(stock =>
+            fetchOptionAggregateData(
+              stock.ticker,
+              1,
+              "day",
+              input.from || "2023-01-09",
+              input.to || "2023-01-09"
+            )
+          );
+
+          const stockVolumeData = (await Promise.all(stockVolumeDataPromises))
+            .filter((data): data is StockData => data !== null);
+
+          // Sort by volume and take top stocks based on limit
+          const topStocksByVolume = stockVolumeData
+            .sort((a, b) => b.volume - a.volume)
+            .slice(0, input.limit);
+
+          return {
+            stocks: topStocksByVolume,
+            count: topStocksByVolume.length
+          };
+        } catch (error) {
+          console.error(error);
           throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "Invalid data type",
+            code: "INTERNAL_SERVER_ERROR",
+            message: error instanceof Error ? error.message : "An error occurred while fetching stock data",
           });
         }
-      }),
+      }
+
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "Invalid data type",
+      });
+    }),
+
+  // Get options data for a specific ticker
+  getOptionsData: protectedProcedure
+    .input(
+      z.object({
+        ticker: z.string(),
+        multiplier: z.number().min(1).default(1),
+        timespan: z.enum(["minute", "hour", "day", "week", "month", "quarter", "year"]).default("day"),
+        from: z.string(),
+        to: z.string(),
+      })
+    )
+    .query(async ({ input }) => {
+      try {
+        const data = await createAbortableRequest(() =>
+          rest.options.aggregates(
+            input.ticker,
+            input.multiplier,
+            input.timespan,
+            input.from,
+            input.to
+          )
+        );
+
+        if (!data || !data.results) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "No options data found for the specified ticker",
+          });
+        }
+
+        return data;
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: error instanceof Error ? error.message : "Failed to fetch options data",
+        });
+      }
+    }),
 });
+
+export type StockRouter = typeof stockRouter;

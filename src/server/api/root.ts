@@ -29,10 +29,7 @@ export const config = {
   address: {
     responseLimit: false,
   },
-  stock: {
-    responseLimit: false,
-  },
-
+  stock: stockRouter,
 }
 
 // export type definition of API
