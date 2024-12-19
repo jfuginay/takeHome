@@ -2,7 +2,7 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { env } from "~/env.mjs";
 import { TRPCError } from "@trpc/server";
-import { restClient } from '@polygon.io/client-js';
+import { restClient, IAggsResults } from '@polygon.io/client-js';
 
 // Initialize the Polygon client
 const rest = restClient(env.POLYGON_API_KEY);
@@ -31,17 +31,6 @@ interface PolygonResponse {
   status: string;
   request_id: string;
   count?: number;
-}
-
-interface AggregateResult {
-  v: number;
-  vw?: number;
-  o: number;
-  c: number;
-  h: number;
-  l: number;
-  t: number;
-  n: number;
 }
 
 // Helper function to create an abortable fetch request
@@ -81,7 +70,9 @@ const fetchOptionAggregateData = async (
       return null;
     }
 
-    const totalVolume = data.results.reduce((sum: number, day: AggregateResult) => sum + (day.v || 0), 0);
+    const totalVolume = data.results.reduce((sum: number, result: IAggsResults) => {
+      return sum + (result.v ?? 0);
+    }, 0);
 
     return {
       ticker: optionTicker,
@@ -195,5 +186,3 @@ export const stockRouter = createTRPCRouter({
       }
     }),
 });
-
-export type StockRouter = typeof stockRouter;
