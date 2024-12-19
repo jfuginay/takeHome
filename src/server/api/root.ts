@@ -16,21 +16,12 @@ export const appRouter = createTRPCRouter({
   stock: stockRouter,
 });
 
+// Configuration for API endpoints
 export const config = {
   api: {
     responseLimit: false,
-  },
-  user: {
-    responseLimit: false,
-  },
-  group: {
-    responseLimit: false,
-  },
-  address: {
-    responseLimit: false,
-  },
-  stock: stockRouter,
-}
+  }
+};
 
 // export type definition of API
 export type AppRouter = typeof appRouter;

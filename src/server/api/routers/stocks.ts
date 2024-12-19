@@ -51,7 +51,6 @@ const fetchOptionAggregateData = async (
     }
 
     const totalVolume = data.results.reduce((sum: number, result) => {
-      // The volume property 'v' might be undefined, so use nullish coalescing
       return sum + (result.v ?? 0);
     }, 0);
 
@@ -66,3 +65,34 @@ const fetchOptionAggregateData = async (
   }
 };
 
+// Define the actual router
+export const stockRouter = createTRPCRouter({
+  getOptionsData: protectedProcedure
+    .input(z.object({
+      optionTicker: z.string(),
+      multiplier: z.number().optional().default(1),
+      timespan: z.string().optional().default("day"),
+      from: z.string().optional().default("2023-01-09"),
+      to: z.string().optional().default("2023-01-09")
+    }))
+    .query(async ({ input }) => {
+      const result = await fetchOptionAggregateData(
+        input.optionTicker,
+        input.multiplier,
+        input.timespan,
+        input.from,
+        input.to
+      );
+
+      if (!result) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: `No data found for ${input.optionTicker}`
+        });
+      }
+
+      return result;
+    })
+});
+
+export type StockRouter = typeof stockRouter;

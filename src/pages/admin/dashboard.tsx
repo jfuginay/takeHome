@@ -22,19 +22,32 @@ import { Chart } from "react-chartjs-2";
 import { useRef, useEffect } from "react";
 import { api } from "~/utils/api";
 
+// Define the interface for the data item
+interface AggregateResult {
+  t: number;  // timestamp
+  v?: number; // volume
+  vw?: number; // volume weighted average
+  o: number;  // open
+  c: number;  // close
+  h: number;  // high
+  l: number;  // low
+  n: number;  // number of transactions
+}
+
 // Register all required components for Chart.js
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const Dashboard: NextPageWithLayout = () => {
   // Fetch stock or options data
+  const optionTicker = "O:AAPL230519C00150000"; // Use proper option ticker format
   const { data, isLoading, error } = api.stock.getOptionsData.useQuery({
-    ticker: "O:SPY251219C00650000",
+    optionTicker,
     from: "2023-01-09",
-    to: "2023-01-09",
+    to: "2023-01-09"
   });
 
   // Chart ref for lifecycle management
-  const chartRef = useRef(null);
+  const chartRef = useRef<ChartJS | null>(null);
 
   useEffect(() => {
     // Cleanup chart instance when component unmounts
@@ -45,15 +58,15 @@ const Dashboard: NextPageWithLayout = () => {
     };
   }, []);
 
-  // Prepare chart data (use API data or mock data in case of errors)
+  // Prepare chart data
   const chartData = {
-    labels: data?.results?.map((item) =>
-      item.t ? new Date(item.t).toLocaleDateString() : "Unknown Date" // Use a fallback when item.t is undefined
+    labels: data?.results?.map((item: AggregateResult) =>
+      item.t ? new Date(item.t).toLocaleDateString() : "Unknown Date"
     ) || ["Jan 9"],
     datasets: [
       {
         label: "Volume",
-        data: data?.results?.map((item) => item.v ?? 0) || [0], // Use 0 as fallback if item.v is undefined
+        data: data?.results?.map((item: AggregateResult) => item.v ?? 0) || [0],
         backgroundColor: "rgba(75, 192, 192, 0.6)",
         borderColor: "rgba(75, 192, 192, 1)",
         borderWidth: 1,
@@ -76,13 +89,16 @@ const Dashboard: NextPageWithLayout = () => {
     },
   };
 
-  // Loading and error states
+  if (!optionTicker) {
+    return <Text color="red.500">Ticker is not defined.</Text>;
+  }
+
   if (isLoading) {
     return <Text>Loading data...</Text>;
   }
 
   if (error) {
-    return <Text color="red.500">Error loading data: {error.message}</Text>;
+    return <Text color="red.500">Error loading data: {JSON.stringify(error.message)}</Text>;
   }
 
   return (
