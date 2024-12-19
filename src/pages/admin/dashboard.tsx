@@ -21,6 +21,7 @@ import {
 import { Chart } from "react-chartjs-2";
 import { useRef, useEffect } from "react";
 import { api } from "~/utils/api";
+import { StockData } from "~/types";
 
 // Define interfaces based on the actual API response
 interface AggregateResult {
@@ -67,16 +68,16 @@ const Dashboard: NextPageWithLayout = () => {
 
   const fallbackData: AggregateResult[] = [];
 
-  const results = data?.results || fallbackData;
+  const results: StockData[] = [];
 
   const chartData = {
     labels: results.map((item) =>
-      new Date(item.t).toLocaleDateString()
+      new Date(item.toString()).toLocaleDateString()
     ),
     datasets: [
       {
         label: "Volume",
-        data: results.map((item) => item.v),
+        data: results.map((item) => item.toString()),
         backgroundColor: "rgba(75, 192, 192, 0.6)",
         borderColor: "rgba(75, 192, 192, 1)",
         borderWidth: 1,
@@ -124,13 +125,13 @@ const Dashboard: NextPageWithLayout = () => {
             as="h2"
             fontSize="1.5rem"
             fontWeight="semi-bold"
-            color={useColorModeValue("gray.800", "gray.100")}
+            color={"gray.800"}
           >
             Options Dashboard {data?.ticker && `- ${data.ticker}`}
           </Heading>
           <Box
             p="4"
-            bg={useColorModeValue("gray.100", "gray.800")}
+            bg={"gray.800"}
             borderRadius="md"
             overflowX="auto"
             height="400px"
@@ -139,7 +140,6 @@ const Dashboard: NextPageWithLayout = () => {
               type="bar"
               data={chartData}
               options={chartOptions}
-              ref={chartRef}
             />
           </Box>
         </Flex>
