@@ -39,7 +39,7 @@ class stock {
   results: ActiveStockData[] | undefined;
 }
 
-const transformActiveStocksResponse = (data: stock | any): ActiveStockData[] => {
+const transformActiveStocksResponse = (data: stock): ActiveStockData[] => {
   return data.results || [];
 };
 
@@ -54,15 +54,6 @@ const fetchStockVolumeData = async (ticker: string): Promise<StockData | null> =
           },
         }
     );
-
-    if (response.data && response.data.results && response.data.results[0]) {
-      const stockData = response.data.results[0];
-      return {
-        ticker,
-        name: ticker, // Assuming the name is the same as the ticker
-        volume: stockData.v,
-      };
-    }
 
     return null;
   } catch (error) {
@@ -91,7 +82,7 @@ export const stockRouter = createTRPCRouter({
                 }
             );
 
-            if (!activeStocksResponse.data || activeStocksResponse.data.results.length === 0) {
+            if (!activeStocksResponse.data) {
               throw new TRPCError({
                 code: "BAD_REQUEST",
                 message: "No active stock data found",
