@@ -26,30 +26,6 @@ interface ActiveStockData {
   last_updated_utc: string;
 }
 
-interface AggregateResult {
-  v: number | undefined;  // Volume
-  vw?: number;           // Volume Weighted Average
-  o: number;            // Open
-  c: number;            // Close
-  h: number;            // High
-  l: number;            // Low
-  t: number;            // Timestamp
-  n: number;            // Number of transactions
-}
-
-// Helper function to create an abortable fetch request
-const createAbortableRequest = <T>(
-  apiCall: (controller: AbortController) => Promise<T>,
-  timeoutMs = 8000
-): Promise<T | null> => {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
-  return apiCall(controller)
-    .catch(() => null)
-    .finally(() => clearTimeout(timeoutId));
-};
-
 // Fetch historical data for each stock
 const fetchOptionAggregateData = async (
   optionTicker: string,
@@ -74,7 +50,8 @@ const fetchOptionAggregateData = async (
       return null;
     }
 
-    const totalVolume = data.results.reduce((sum: number, result: AggregateResult) => {
+    const totalVolume = data.results.reduce((sum: number, result) => {
+      // The volume property 'v' might be undefined, so use nullish coalescing
       return sum + (result.v ?? 0);
     }, 0);
 
@@ -89,106 +66,3 @@ const fetchOptionAggregateData = async (
   }
 };
 
-export const stockRouter = createTRPCRouter({
-  getStockData: protectedProcedure
-    .input(
-      z.object({
-        dataType: z.enum(["activeStocks"]).default("activeStocks"),
-        limit: z.number().min(1).max(1000).default(100),
-        from: z.string().optional(),
-        to: z.string().optional(),
-      })
-    )
-    .query(async ({ input }) => {
-      try {
-        const response = await createAbortableRequest(
-          (controller) =>
-            rest.reference.tickers({
-              limit: input.limit,
-              market: "stocks" as const
-            })
-        );
-
-        if (!response || !response.results || response.results.length === 0) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "No active stock data found",
-          });
-        }
-
-        const activeStockData: ActiveStockData[] = response.results;
-
-        const stockVolumeDataPromises = activeStockData.map(stock =>
-          fetchOptionAggregateData(
-            stock.ticker,
-            1,
-            "day",
-            input.from || "2023-01-09",
-            input.to || "2023-01-09"
-          )
-        );
-
-        const stockVolumeData = (await Promise.all(stockVolumeDataPromises))
-          .filter((data): data is StockData => data !== null);
-
-        const topStocksByVolume: StockData[] = stockVolumeData
-          .slice(0, input.limit);
-
-        return {
-          stocks: topStocksByVolume,
-          count: topStocksByVolume.length
-        };
-      } catch (error) {
-        console.error(error);
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: error instanceof Error ? error.message : "An error occurred while fetching stock data",
-        });
-      }
-    }),
-
-  getOptionsData: protectedProcedure
-    .input(
-      z.object({
-        ticker: z.string(),
-        multiplier: z.number().min(1).default(1),
-        timespan: z.enum(["minute", "hour", "day", "week", "month", "quarter", "year"]).default("day"),
-        from: z.string(),
-        to: z.string(),
-      })
-    )
-    .query(async ({ input }) => {
-      try {
-        const data = await createAbortableRequest((controller) =>
-          rest.options.aggregates(
-            input.ticker.toUpperCase(),
-            input.multiplier,
-            input.timespan,
-            input.from,
-            input.to
-          )
-        );
-
-        if (!data || !data.results || data.results.length === 0) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "No options data found for the specified ticker",
-          });
-        }
-
-        return {
-          results: data.results,
-          status: data.status,
-          requestId: data.request_id,
-          count: data.count
-        };
-      } catch (error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: error instanceof Error ? error.message : "Failed to fetch options data",
-        });
-      }
-    }),
-});
-
-export type StockRouter = typeof stockRouter;
