@@ -3,6 +3,17 @@ import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import axios from "axios";
 import { env } from "~/env.mjs";
 import { TRPCError } from "@trpc/server";
+import { restClient } from '@polygon.io/client-js';
+const rest = restClient(process.env.POLY_API_KEY);
+
+rest.options
+  .aggregates("AAPL", 1, "day", "2023-01-01", "2023-04-14")
+  .then((data) => {
+    console.log("Options Aggregate Data:", data);
+  })
+  .catch((e) => {
+    console.error("An error happened:", e);
+  });
 
 // Shared StockData interface
 interface StockData {
@@ -24,7 +35,13 @@ interface ActiveStockData {
   last_updated_utc: string;
 }
 
-const transformActiveStocksResponse = (data: any): ActiveStockData[] => {
+class stock {
+  results: ActiveStockData[] | undefined;
+}
+
+const transformActiveStocksResponse = (
+  data: stock | any
+): ActiveStockData[] => {
   return data.results.map((stock: any) => ({
     ticker: stock.ticker,
     name: stock.name,
