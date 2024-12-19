@@ -44,8 +44,7 @@ const Dashboard: NextPageWithLayout = () => {
   const { data, isLoading, error } = api.stock.getOptionsData.useQuery({
     optionTicker,
     from: "2023-01-09",
-    from: "2023-01-09",
-    to: "2023-01-09"
+    to: "2023-01-09",
   });
 
   // Chart ref for lifecycle management
