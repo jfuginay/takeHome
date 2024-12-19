@@ -2,7 +2,6 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { env } from "~/env.mjs";
 import { TRPCError } from "@trpc/server";
-import type { AggregationResult } from "@polygon.io/client-js";
 import { restClient } from '@polygon.io/client-js';
 
 // Initialize the Polygon client
@@ -32,6 +31,18 @@ interface PolygonResponse {
   status: string;
   request_id: string;
   count?: number;
+}
+
+// Define the aggregation result interface based on Polygon.io's actual response structure
+interface AggregateResult {
+  v: number;        // volume
+  vw?: number;      // volume weighted average price
+  o: number;        // open price
+  c: number;        // close price
+  h: number;        // high price
+  l: number;        // low price
+  t: number;        // timestamp
+  n: number;        // number of transactions
 }
 
 // Helper function to create an abortable fetch request
@@ -73,7 +84,7 @@ const fetchOptionAggregateData = async (
     }
 
     // Calculate total volume from results
-    const totalVolume = data.results.reduce((sum: number, day: AggregationResult) => sum + (day.v || 0), 0);
+    const totalVolume = data.results.reduce((sum: number, day: AggregateResult) => sum + (day.v || 0), 0);
 
     return {
       ticker: optionTicker,
