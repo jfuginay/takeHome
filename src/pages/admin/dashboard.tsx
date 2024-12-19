@@ -36,7 +36,6 @@ const Dashboard: NextPageWithLayout = () => {
     // Cleanup chart when component unmounts
     return () => {
       if (chartRef.current) {
-        chartRef.current.destroy();
         chartRef.current = null;
       }
     };
