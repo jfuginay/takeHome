@@ -3,6 +3,7 @@ default:
 
 stages:
   - deploy
+  - verify_job
 
 variables:
   NODE_ENV: 'production'
@@ -10,6 +11,11 @@ variables:
 cache:
   paths:
     - node_modules/
+verify_job:
+  script:
+    - echo "VERCEL_TOKEN is ${VERCEL_TOKEN:+set}"  # This will print "set" if the variable exists and is non-empty
+    - npm install -g vercel@latest
+    - vercel pull --yes --environment=production --token=$VERCEL_TOKEN --scope=$VERCEL_ORG_ID
 
 deploy_production:
   stage: deploy
