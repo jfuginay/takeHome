@@ -48,12 +48,12 @@ const Dashboard: NextPageWithLayout = () => {
   // Prepare chart data (use API data or mock data in case of errors)
   const chartData = {
     labels: data?.results?.map((item) =>
-      new Date(item.t).toLocaleDateString() // Convert time from timestamp to readable date
+      item.t ? new Date(item.t).toLocaleDateString() : "Unknown Date" // Use a fallback when item.t is undefined
     ) || ["Jan 9"],
     datasets: [
       {
         label: "Volume",
-        data: data?.results?.map((item) => item.v) || [100], // Use `v` for volume
+        data: data?.results?.map((item) => item.v ?? 0) || [0], // Use 0 as fallback if item.v is undefined
         backgroundColor: "rgba(75, 192, 192, 0.6)",
         borderColor: "rgba(75, 192, 192, 1)",
         borderWidth: 1,
