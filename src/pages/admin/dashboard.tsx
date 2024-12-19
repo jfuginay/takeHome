@@ -27,10 +27,10 @@ import { useRef, useEffect } from "react";
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const Dashboard: NextPageWithLayout = () => {
-  const { data, error, isLoading } = api.stock.getStockData.useQuery({ dataType: "activeStocks" });
+  const { error, isLoading } = { error: null, isLoading: false };
 
   // Chart ref to manage cleanup
-  const chartRef = useRef<ChartJS | null>(null);
+  const chartRef = useRef(null);
 
   useEffect(() => {
     // Cleanup chart when component unmounts
@@ -44,13 +44,13 @@ const Dashboard: NextPageWithLayout = () => {
 
   // Prepare chart data
   const chartData = {
-    labels: data?.top1000StocksByVolume?.map((stock) => stock.ticker) || [],
+    labels: ["Category 1", "Category 2", "Category 3", "Category 4"],
     datasets: [
       {
-        label: "Trading Volume",
-        data: data?.top1000StocksByVolume?.map((stock) => stock.volume) || [],
-        backgroundColor: "rgba(54, 162, 235, 0.6)",
-        borderColor: "rgba(54, 162, 235, 1)",
+        label: "Sample Data",
+        data: [10, 20, 30, 40],
+        backgroundColor: "rgba(75, 192, 192, 0.6)",
+        borderColor: "rgba(75, 192, 192, 1)",
         borderWidth: 1,
       },
     ],
@@ -71,13 +71,9 @@ const Dashboard: NextPageWithLayout = () => {
     },
   };
 
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
 
-  if (error) {
-    return <div>Error: {error.message}</div>;
-  }
+
+
 
   return (
       <AuthRequired roles={RoleSets.users}>
@@ -92,9 +88,7 @@ const Dashboard: NextPageWithLayout = () => {
               >
                 Stock Dashboard
               </Heading>
-              <Text fontSize="1rem" color={useColorModeValue("gray.600", "gray.400")} mb="4">
-                Top 10 Stocks by Trading Volume:
-              </Text>
+
               <Box
                   p="4"
                   bg={useColorModeValue("gray.100", "gray.800")}
@@ -110,21 +104,7 @@ const Dashboard: NextPageWithLayout = () => {
                 />
               </Box>
             </Flex>
-            <Stack overflowY="scroll" pr="1" pb="5" spacing="1rem" mt="4">
-              {data?.top1000StocksByVolume?.map((stock, idx) => (
-                  <Box
-                      key={idx}
-                      boxShadow="md"
-                      borderRadius="md"
-                      p="3"
-                      bg={useColorModeValue("white", "gray.700")}
-                  >
-                    <Text fontWeight="bold">{stock.ticker}</Text>
-                    <Text>Volume: {stock.volume}</Text>
-                    <Text>Name: {stock.name}</Text>
-                  </Box>
-              ))}
-            </Stack>
+
           </Flex>
         </Flex>
       </AuthRequired>

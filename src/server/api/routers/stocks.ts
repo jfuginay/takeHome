@@ -39,20 +39,8 @@ class stock {
   results: ActiveStockData[] | undefined;
 }
 
-const transformActiveStocksResponse = (
-  data: stock | any
-): ActiveStockData[] => {
-  return data.results.map((stock: any) => ({
-    ticker: stock.ticker,
-    name: stock.name,
-    market: stock.market,
-    locale: stock.locale,
-    primary_exchange: stock.primary_exchange,
-    type: stock.type,
-    active: stock.active,
-    currency_name: stock.currency_name,
-    last_updated_utc: stock.last_updated_utc,
-  }));
+const transformActiveStocksResponse = (data: stock | any): ActiveStockData[] => {
+  return data.results || [];
 };
 
 // Fetch historical data for each stock to get the volume
