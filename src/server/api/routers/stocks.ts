@@ -48,8 +48,8 @@ const fetchOptionAggregateData = async (
   optionTicker: string,
   multiplier: number = 1,
   timespan: string = "day",
-  from: string = "2023-01-09",
-  to: string = "2023-01-09"
+  from: string = "2024-12-19",
+  to: string = "2024-12-19"
 ): Promise<StockData | null> => {
   try {
     const data = await createAbortableRequest(
