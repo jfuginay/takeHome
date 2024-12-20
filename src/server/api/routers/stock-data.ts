@@ -9,12 +9,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   console.log(`[DEBUG] Incoming request: ${req.method} ${req.url}`);
   console.log('[DEBUG] Request headers:', req.headers);
   const { symbol } = req.query;
-  const todayString = new Date().toISOString().split('T')[0];
+  const todayString = new Date().toISOString().split('T')[0];  // Format: YYYY-MM-DD
+
   const querySchema = z.object({
     symbol: z.string().nonempty("Symbol is required"),
-    from: z.string().optional().default(todayString),
-    to: z.string().optional().default(todayString),
+    from: z.string().optional().default(todayString as string),
+    to: z.string().optional().default(todayString as string),
   });
+
 
   console.log('[DEBUG] Query parameters:', req.query);
 
