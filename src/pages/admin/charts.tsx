@@ -14,11 +14,24 @@ import { restClient } from "@polygon.io/client-js"; // Polygon.io client import
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 // Initialize the `rest` client for Polygon.io
-const rest = restClient(process.env.POLY_API_KEY || ""); // Use your actual API key here
+const rest = restClient(process.env.POLY_API_KEY || "qe5UlgmKaFzW_36P22sfg2l2BlTTVwhJ"); // Use your actual API key here
 
 const ChartsPage: NextPageWithLayout = () => {
     const [selectedStock, setSelectedStock] = useState<string>("AAPL");
-    const [chartData, setChartData] = useState<any>(null); // State to store chart data
+interface ChartDataset {
+    label: string;
+    data: number[];
+    backgroundColor: string;
+    borderColor: string;
+    borderWidth: number;
+}
+
+interface ChartData {
+    labels: string[];
+    datasets: ChartDataset[];
+}
+
+const [chartData, setChartData] = useState<ChartData | null>(null); // State to store chart data
     const chartRef = useRef<ChartJS | null>(null);
 
     // Predefined list of the main 5 stocks
@@ -47,13 +60,14 @@ const ChartsPage: NextPageWithLayout = () => {
                   "2023-04-14" // End date
                 );
                 console.log(`Data for ${selectedStock}:`, data);
-                setChartData(formatChartData(data)); // Format and set chart data
+setChartData(formatChartData(data) as ChartData | null); // Format and set chart data
             } catch (error) {
                 console.error("Error fetching stock data:", error);
             }
         };
-
-        fetchStockData();
+      void fetchStockData().then((r) => {
+        console.log(r); // Replace with actual logic for handling the result
+      });
     }, [selectedStock]);
 
     // Handle stock selection change
@@ -62,22 +76,23 @@ const ChartsPage: NextPageWithLayout = () => {
     };
 
     // Format fetched data for Chart.js
-    const formatChartData = (data: any) => {
-        if (!data || !data.results || data.results.length === 0) return null;
+const formatChartData = (data: any): ChartData | null => {
+
+if (!data || !data.results || data.results.length === 0) return null as ChartData | null;
 
         return {
-            labels: data.results.map((entry: any) => new Date(entry.t).toLocaleDateString()), // Map dates
+labels: data.results.map((entry: { t: string }) => new Date(entry.t).toLocaleDateString()), // Map dates
             datasets: [
                 {
                     label: "Open Price",
-                    data: data.results.map((entry: any) => entry.o), // Open prices
+data: data.results.map((entry: { o: number }) => entry.o), // Open prices
                     backgroundColor: "rgba(54, 162, 235, 0.5)",
                     borderColor: "rgba(54, 162, 235, 1)",
                     borderWidth: 1,
                 },
                 {
                     label: "Close Price",
-                    data: data.results.map((entry: any) => entry.c), // Close prices
+data: data.results.map((entry: { c: number }) => entry.c), // Close prices
                     backgroundColor: "rgba(255, 99, 132, 0.5)",
                     borderColor: "rgba(255, 99, 132, 1)",
                     borderWidth: 1,

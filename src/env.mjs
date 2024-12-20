@@ -38,6 +38,7 @@ const server = z.object({
  */
 const client = z.object({
   NEXT_PUBLIC_MAPBOX_TOKEN: z.string().min(1),
+  POLYGON_API_KEY: z.string().min(1),
 });
 
 /**

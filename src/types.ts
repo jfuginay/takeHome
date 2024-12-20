@@ -18,6 +18,19 @@ const addressWithVisits = Prisma.validator<Prisma.AddressArgs>()({
   },
 })
 
+export interface ChartDataset {
+  label: string; // Label for the dataset, e.g., "Gamma Exposure"
+  data: number[]; // Array of numeric values (for plotting)
+  backgroundColor: string[]; // Colors for the bars, points, etc.
+  borderColor: string[]; // Colors for borders of the elements
+  borderWidth: number; // Thickness of the bar/point borders
+}
+
+export interface ChartData {
+  labels: string[]; // Labels for the x-axis (e.g., strike prices)
+  datasets: ChartDataset[]; // Array of datasets
+}
+
 const addressWithGroupsAndVisits = Prisma.validator<Prisma.AddressArgs>()({
   include: {
     group: true
