@@ -128,7 +128,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           </DrawerContent>
         </Drawer>
         <Navbar onOpen={onOpen} />
-        <Box ml={{ base: 0, md: 60 }}>{children}</Box>
+<Box ml={{ base: 0, md: 60 }} p={4} overflow="hidden">
+  {children}
+</Box>
       </Box>
   );
 }

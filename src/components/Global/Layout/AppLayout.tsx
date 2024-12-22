@@ -44,7 +44,7 @@ const DefaultLayout: React.FC<{ children: ReactNode }> = ({ children }) => {
   return (
       <Box minH="100vh" bg={mainBgColor} color={textColor}>
         <Navbar />
-        <Box>
+        <Box mx={{ base: 4, md: 8 }} my={{ base: 4, md: 6 }} maxW="1200px" w="full">
           {children}
         </Box>
       </Box>

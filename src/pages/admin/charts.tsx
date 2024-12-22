@@ -1,195 +1,280 @@
-import type { NextPageWithLayout } from "~/pages/_app";
+import React, { useEffect, useState } from "react";
 import { AdminLayout } from "~/components/Global/Layout";
-import { AuthRequired } from "~/components/Global/AuthRequired";
 import {
-  Flex, Text, useColorModeValue, Heading, Box, Select,
-  Input,
-} from "@chakra-ui/react";
-import { RoleSets } from "~/common/roles";
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from "chart.js";
-import { Bar } from "react-chartjs-2";
-import { useRef, useEffect, useState } from "react";
-import { restClient } from "@polygon.io/client-js";
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
+} from 'recharts';
 
-// Register required components for Chart.js
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+// Dark theme configuration
+const darkTheme = {
+  backgroundColor: "#1a1a1a",
+  textColor: "#ffffff",
+  gridColor: "#333333",
+  tooltipBackground: "#262626",
+  barColors: {
+    open: "#3b82f6",  // Blue
+    close: "#ef4444"  // Red
+  }
+};
 
-// Initialize the `rest` client for Polygon.io
-const rest = restClient(process.env.POLY_API_KEY || "qe5UlgmKaFzW_36P22sfg2l2BlTTVwhJ");
+// Mock data generator remains the same
+const generateMockData = (stockSymbol: string, days: number) => {
+  const data = [];
+  const basePrice = Math.random() * 100 + 100;
 
-const ChartsPage: NextPageWithLayout = () => {
+  for (let i = 0; i < days; i++) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+
+    const openPrice = basePrice + (Math.random() - 0.5) * 10;
+    const closePrice = openPrice + (Math.random() - 0.5) * 5;
+
+    data.push({
+      date: date.toLocaleDateString(),
+      open: parseFloat(openPrice.toFixed(2)),
+      close: parseFloat(closePrice.toFixed(2)),
+      symbol: stockSymbol
+    });
+  }
+
+  return data.reverse();
+};
+
+const StockDashboard = () => {
   const [selectedStock, setSelectedStock] = useState<string>("AAPL");
+  return (
+    <AdminLayout>
+      <StockDashboardContent />
+    </AdminLayout>
+  );
+};
+
+const StockDashboardContent = () => {
+  const [selectedStock, setSelectedStock] = useState<string>("AAPL");
+  const [selectedStockSecondary, setSelectedStockSecondary] = useState<string>("SPY");
   const [startDate, setStartDate] = useState<string>("2024-12-12");
   const [endDate, setEndDate] = useState<string>("2024-12-19");
+  const [chartData, setChartData] = useState<any[]>([]);
+  const [chartDataSecondary, setChartDataSecondary] = useState<any[]>([]);
 
-  interface ChartDataset {
-    label: string;
-    data: number[];
-    backgroundColor: string;
-    borderColor: string;
-    borderWidth: number;
-  }
-
-  interface ChartData {
-    labels: string[];
-    datasets: ChartDataset[];
-  }
-
-  const [chartData, setChartData] = useState<ChartData | null>(null);
-  const chartRef = useRef<ChartJS | null>(null);
-
-  // Predefined list of the main 5 stocks
   const stockOptions = ["AAPL", "SPY", "QQQ", "MSFT", "GOOGL"];
 
-  // Cleanup ChartJS instance when unmounting the component
   useEffect(() => {
-    return () => {
-      if (chartRef.current) {
-        chartRef.current.destroy();
-        chartRef.current = null;
-      }
-    };
-  }, []);
+    setChartData(generateMockData(selectedStock, 7));
+    setChartDataSecondary(generateMockData(selectedStockSecondary, 7));
+  }, [selectedStock, selectedStockSecondary, startDate, endDate]);
 
-  // Fetch stock option aggregates when the selected stock changes
-  useEffect(() => {
-    const fetchStockData = async () => {
-      if (!selectedStock) return;
-      try {
-        const data = await rest.options.aggregates(
-          selectedStock,
-          1,
-          "day",
-          startDate,
-          endDate
-        );
-        console.log(`Data for ${selectedStock}:`, data);
-        setChartData(formatChartData(data) as ChartData | null);
-      } catch (error) {
-        console.error("Error fetching stock data:", error);
-      }
-    };
-    void fetchStockData().then((r) => {
-      console.log(r);
-    });
-  }, [selectedStock, startDate, endDate]);
-
-  // Handle stock selection change
-  const handleStockChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedStock(event.target.value);
-  };
-
-  // Format fetched data for Chart.js
-  const formatChartData = (data: any): ChartData | null => {
-    if (!data || !data.results || data.results.length === 0) return null as ChartData | null;
-
-    return {
-      labels: data.results.map((entry: { t: string }) => new Date(entry.t).toLocaleDateString()),
-      datasets: [
-        {
-          label: "Open Price",
-          data: data.results.map((entry: { o: number }) => entry.o),
-          backgroundColor: "rgba(54, 162, 235, 0.5)",
-          borderColor: "rgba(54, 162, 235, 1)",
-          borderWidth: 1,
-        },
-        {
-          label: "Close Price",
-          data: data.results.map((entry: { c: number }) => entry.c),
-          backgroundColor: "rgba(255, 99, 132, 0.5)",
-          borderColor: "rgba(255, 99, 132, 1)",
-          borderWidth: 1,
-        },
-      ],
-    };
-  };
-
-  // Chart options configuration
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    scales: {
-      x: {
-        type: "category" as const,
-        beginAtZero: true,
-      },
-      y: {
-        type: "linear" as const,
-        beginAtZero: true,
-      },
-    },
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-gray-800 border border-gray-700 p-3 rounded-lg shadow-lg">
+          <p className="text-gray-200 mb-1">{`Date: ${label}`}</p>
+          {payload.map((entry: any, index: number) => (
+            <p key={index} style={{ color: entry.color }}>
+              {`${entry.name}: $${entry.value}`}
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
   };
 
   return (
-    <AuthRequired roles={RoleSets.users}>
-      <Flex justifyContent="space-evenly" mt="10" maxH="84.3vh" mx="5">
-        <Flex flexDirection="column" w="100%" px="7">
-          <Flex flexDirection="column">
-            <Heading
-              as="h2"
-              fontSize="1.5rem"
-              fontWeight="semi-bold"
-              color={useColorModeValue("gray.800", "gray.100")}
-            >
-              Stock Dashboard
-            </Heading>
-            <Text fontSize="1rem" color={useColorModeValue("gray.600", "gray.400")} mb="4">
-              Select a stock to see detailed options statistics:
-            </Text>
+    <div className="p-6 max-h-[84.3vh] bg-gray-900">
+      <div>
+        <h2 className="text-2xl font-semibold mb-2 text-white">Stock Dashboard</h2>
+        <p className="text-gray-400 mb-4">
+          Select stocks to compare detailed options statistics:
+        </p>
+      </div>
 
-            {/* Stock Selector */}
-            <Select
+      {/* Date Range Selector Row */}
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <div>
+          <label className="text-sm mb-2 block text-white">Start Date</label>
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            max={endDate}
+            className="block w-full rounded-md border border-gray-600 bg-gray-700 text-white py-2 px-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
+        </div>
+        <div>
+          <label className="text-sm mb-2 block text-white">End Date</label>
+          <input
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            min={startDate}
+            className="block w-full rounded-md border border-gray-600 bg-gray-700 text-white py-2 px-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
+        </div>
+      </div>
+
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-2 gap-6">
+        {/* Left Column */}
+        <div className="space-y-4">
+          <div className="rounded-lg border border-gray-700 bg-gray-800 p-4 shadow-lg">
+            <h3 className="text-lg font-medium text-white mb-3">Primary Stock Chart</h3>
+            <select
               value={selectedStock}
-              onChange={handleStockChange}
-              placeholder="Select stock"
-              mb="4"
+              onChange={(e) => setSelectedStock(e.target.value)}
+              className="block w-full rounded-md border border-gray-600 bg-gray-700 text-white py-2 px-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 mb-4"
             >
               {stockOptions.map((stock) => (
                 <option key={stock} value={stock}>
                   {stock}
                 </option>
               ))}
-            </Select>
-
-            {/* Date Range Selectors */}
-            <Flex gap="4" mb="4">
-              <Box flex="1">
-                <Text fontSize="sm" mb="2">Start Date</Text>
-                <Input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  max={endDate}
-                  bg={useColorModeValue("white", "gray.700")}
-                />
-              </Box>
-              <Box flex="1">
-                <Text fontSize="sm" mb="2">End Date</Text>
-                <Input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  min={startDate}
-                  bg={useColorModeValue("white", "gray.700")}
-                />
-              </Box>
-            </Flex>
-
-            {/* Chart section */}
-            <Box mt={5}>
-              {chartData ? (
-                <Bar options={chartOptions} data={chartData} />
+            </select>
+            <div className="h-[400px]">
+              {chartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={chartData}
+                    layout="vertical"
+                    margin={{
+                      top: 20,
+                      right: 30,
+                      left: 60,
+                      bottom: 5,
+                    }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke={darkTheme.gridColor}
+                      horizontal={false}
+                    />
+                    <XAxis
+                      type="number"
+                      stroke={darkTheme.textColor}
+                      tick={{ fill: darkTheme.textColor }}
+                    />
+                    <YAxis
+                      dataKey="date"
+                      type="category"
+                      stroke={darkTheme.textColor}
+                      tick={{ fill: darkTheme.textColor }}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: darkTheme.tooltipBackground,
+                        border: 'none',
+                        borderRadius: '8px',
+                        color: darkTheme.textColor
+                      }}
+                    />
+                    <Legend
+                      wrapperStyle={{ color: darkTheme.textColor }}
+                    />
+                    <Bar
+                      dataKey="open"
+                      fill={darkTheme.barColors.open}
+                      name="Open Price"
+                      radius={[0, 4, 4, 0]}
+                    />
+                    <Bar
+                      dataKey="close"
+                      fill={darkTheme.barColors.close}
+                      name="Close Price"
+                      radius={[0, 4, 4, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
               ) : (
-                <Text color="gray.500">Select a stock to view its options aggregate data.</Text>
+                <p className="text-gray-400">Select a stock to view its options aggregate data.</p>
               )}
-            </Box>
-          </Flex>
-        </Flex>
-      </Flex>
-    </AuthRequired>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column */}
+        <div className="space-y-4">
+          <div className="rounded-lg border border-gray-700 bg-gray-800 p-4 shadow-lg">
+            <h3 className="text-lg font-medium text-white mb-3">Secondary Stock Chart</h3>
+            <select
+              value={selectedStockSecondary}
+              onChange={(e) => setSelectedStockSecondary(e.target.value)}
+              className="block w-full rounded-md border border-gray-600 bg-gray-700 text-white py-2 px-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 mb-4"
+            >
+              {stockOptions.map((stock) => (
+                <option key={stock} value={stock}>
+                  {stock}
+                </option>
+              ))}
+            </select>
+            <div className="h-[400px]">
+              {chartDataSecondary.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={chartDataSecondary}
+                    layout="vertical"
+                    margin={{
+                      top: 20,
+                      right: 30,
+                      left: 60,
+                      bottom: 5,
+                    }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke={darkTheme.gridColor}
+                      horizontal={false}
+                    />
+                    <XAxis
+                      type="number"
+                      stroke={darkTheme.textColor}
+                      tick={{ fill: darkTheme.textColor }}
+                    />
+                    <YAxis
+                      dataKey="date"
+                      type="category"
+                      stroke={darkTheme.textColor}
+                      tick={{ fill: darkTheme.textColor }}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: darkTheme.tooltipBackground,
+                        border: 'none',
+                        borderRadius: '8px',
+                        color: darkTheme.textColor
+                      }}
+                    />
+                    <Legend
+                      wrapperStyle={{ color: darkTheme.textColor }}
+                    />
+                    <Bar
+                      dataKey="open"
+                      fill={darkTheme.barColors.open}
+                      name="Open Price"
+                      radius={[0, 4, 4, 0]}
+                    />
+                    <Bar
+                      dataKey="close"
+                      fill={darkTheme.barColors.close}
+                      name="Close Price"
+                      radius={[0, 4, 4, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-gray-400">Select a stock to view its options aggregate data.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
-ChartsPage.getLayout = (page) => <AdminLayout>{page}</AdminLayout>;
-
-export default ChartsPage;
+export default StockDashboard;
