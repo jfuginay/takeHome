@@ -4,118 +4,120 @@ import { AuthRequired } from "~/components/Global/AuthRequired";
 import {
   Flex,
   Text,
-  useColorModeValue,
   Heading,
   Box,
+  Table,
+  Tbody,
+  Tr,
+  Td,
+  Th,
+  Thead,
+  FormControl,
+  FormLabel,
 } from "@chakra-ui/react";
 import { RoleSets } from "~/common/roles";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-} from "chart.js";
-import { Chart } from "react-chartjs-2";
-import { useRef, useEffect } from "react";
+import { useState } from "react";
 import { api } from "~/utils/api";
-import { StockData } from "~/types";
 
-// Define interfaces based on the actual API response
-interface AggregateResult {
-  t: number;  // timestamp
-  v: number;  // volume
-  vw: number; // volume weighted average
-  o: number;  // open
-  c: number;  // close
-  h: number;  // high
-  l: number;  // low
-  n: number;  // number of transactions
-}
-
-interface ApiResponse {
-  adjusted: boolean;
-  count: number;
-  queryCount: number;
-  request_id: string;
-  results: AggregateResult[];
-  resultsCount: number;
-  status: string;
+interface StockVolume {
   ticker: string;
+  name: string;
+  market: string;
+  primary_exchange: string;
+  volume: number;
+  price: number;
 }
-
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const Dashboard: NextPageWithLayout = () => {
-  const optionTicker = "O:AAPL230519C00150000";
-  const { data, isLoading, error } = api.stock.getOptionsData.useQuery<ApiResponse>({
-    optionTicker,
-    from: "2023-01-09",
-    to: "2023-01-09",
-  });
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
 
-  const chartRef = useRef<ChartJS | null>(null);
+  const {
+    data: activeStocksData,
+    isLoading: isLoadingActiveStocks,
+    error: activeStocksError,
+    refetch: refetchStocks
+  } = api.stock.getTopActiveStocks.useQuery(
+    { date: selectedDate },
+    {
+      enabled: !!selectedDate,
+      retry: 1
+    }
+  );
 
-  useEffect(() => {
-    return () => {
-      if (chartRef.current) {
-        chartRef.current = null;
-      }
-    };
-  }, []);
-
-  const fallbackData: AggregateResult[] = [];
-
-  const results: StockData[] = [];
-
-  const chartData = {
-    labels: results.map((item) =>
-      new Date(item.toString()).toLocaleDateString()
-    ),
-    datasets: [
-      {
-        label: "Volume",
-        data: results.map((item) => item.toString()),
-        backgroundColor: "rgba(75, 192, 192, 0.6)",
-        borderColor: "rgba(75, 192, 192, 1)",
-        borderWidth: 1,
-      },
-    ],
+  const handleDateChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSelectedDate(event.target.value);
+    await refetchStocks();
   };
 
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    scales: {
-      x: {
-        type: "category" as const,
-        beginAtZero: true,
-      },
-      y: {
-        type: "linear" as const,
-        beginAtZero: true,
-      },
-    },
+  const formatVolume = (volume: number | null | undefined): string => {
+    if (volume === null || volume === undefined) return 'N/A';
+
+    const numVolume = Number(volume);
+    if (isNaN(numVolume)) return 'Invalid';
+
+    if (numVolume >= 1e9) {
+      return `${(numVolume / 1e9).toFixed(2)}B`;
+    } else if (numVolume >= 1e6) {
+      return `${(numVolume / 1e6).toFixed(2)}M`;
+    } else if (numVolume >= 1e3) {
+      return `${(numVolume / 1e3).toFixed(2)}K`;
+    }
+    return numVolume.toFixed(0);
   };
 
-  if (!optionTicker) {
-    return <Text color="red.500">Ticker is not defined.</Text>;
-  }
+  const formatPrice = (price: number | null | undefined): string => {
+    if (price === null || price === undefined) return 'N/A';
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(price);
+  };
 
-  if (isLoading) {
-    return <Text>Loading data...</Text>;
-  }
+  const renderActiveStocks = () => {
+    if (isLoadingActiveStocks) {
+      return <Text color="white">Loading top active stocks...</Text>;
+    }
 
-  if (error) {
+    if (activeStocksError) {
+      return (
+        <Text color="red.500">
+          Unable to fetch active stocks data. Error:{" "}
+          {activeStocksError.message || "Unknown error."}
+        </Text>
+      );
+    }
+
+    if (!activeStocksData || activeStocksData.length === 0) {
+      return <Text color="gray.500">No active stocks data available for {selectedDate}.</Text>;
+    }
+
     return (
-      <Text color="red.500">
-        Unable to fetch data. Please try again later. Error:{" "}
-        {error.message || "Unknown error."}
-      </Text>
+      <Table variant="simple" colorScheme="teal" size="sm" mt="4">
+        <Thead>
+          <Tr>
+            <Th color="white">Ticker</Th>
+            <Th color="white">Name</Th>
+            <Th color="white">Exchange</Th>
+            <Th color="white" isNumeric>Volume</Th>
+            <Th color="white" isNumeric>Price</Th>
+          </Tr>
+        </Thead>
+        <Tbody>
+          {activeStocksData.map((stock, index) => (
+            <Tr key={index}>
+              <Td color="white" fontWeight="bold">{stock.ticker}</Td>
+              <Td color="white">{stock.name}</Td>
+              <Td color="white">{stock.primary_exchange}</Td>
+              <Td color="white" isNumeric>{formatVolume(stock.volume)}</Td>
+              <Td color="white" isNumeric>{formatPrice(stock.price)}</Td>
+            </Tr>
+          ))}
+        </Tbody>
+      </Table>
     );
-  }
+  };
 
   return (
     <AuthRequired roles={RoleSets.users}>
@@ -125,22 +127,42 @@ const Dashboard: NextPageWithLayout = () => {
             as="h2"
             fontSize="1.5rem"
             fontWeight="semi-bold"
-            color={"gray.800"}
+            color="white"
+            mb="4"
           >
-            Options Dashboard {data?.ticker && `- ${data.ticker}`}
+            Top Stocks by Trading Volume
           </Heading>
-          <Box
-            p="4"
-            bg={"gray.800"}
-            borderRadius="md"
-            overflowX="auto"
-            height="400px"
-          >
-            <Chart
-              type="bar"
-              data={chartData}
-              options={chartOptions}
+
+          <FormControl mb="4">
+            <FormLabel color="white">Select Date</FormLabel>
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={handleDateChange}
+              max={new Date().toISOString().split("T")[0]}
+              style={{
+                backgroundColor: "#2D3748",
+                color: "white",
+                borderColor: "#4A5568",
+                padding: "8px",
+                borderRadius: "4px",
+                width: "100%"
+              }}
             />
+          </FormControl>
+
+          <Box
+            mb="6"
+            bg="gray.800"
+            p="4"
+            borderRadius="md"
+            border="1px"
+            borderColor="gray.700"
+          >
+            <Heading as="h3" fontSize="1.25rem" fontWeight="medium" color="teal.300" mb="4">
+              Top 5 Active Stocks for {selectedDate}
+            </Heading>
+            {renderActiveStocks()}
           </Box>
         </Flex>
       </Flex>

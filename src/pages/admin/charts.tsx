@@ -56,8 +56,6 @@ const StockDashboard = () => {
 };
 
 const StockDashboardContent = () => {
-  const { data: session } = useSession();
-  if (!session) return null;
 
   const [selectedStock, setSelectedStock] = useState<string>("AAPL");
   const [selectedStockSecondary, setSelectedStockSecondary] = useState<string>("SPY");
@@ -70,8 +68,11 @@ const StockDashboardContent = () => {
 
   useEffect(() => {
     setChartData(generateMockData(selectedStock, 7));
+  }, [selectedStock, startDate, endDate]);
+
+  useEffect(() => {
     setChartDataSecondary(generateMockData(selectedStockSecondary, 7));
-  }, [selectedStock, selectedStockSecondary, startDate, endDate]);
+  }, [selectedStockSecondary, startDate, endDate]);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {

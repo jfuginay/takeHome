@@ -63,37 +63,67 @@ const fetchOptionAggregateData = async (
         )
     );
 
-if (!data || !Array.isArray(data.results) || data.results.length === 0) {
-  return {
-    ticker: optionTicker,
-    name: optionTicker,
-    volume: 0,
-    chartData: []
-  };
+    if (!data || !Array.isArray(data.results) || data.results.length === 0) {
+      return {
+        ticker: optionTicker,
+        name: optionTicker,
+        volume: 0,
+        chartData: []
+      };
     }
 
-const transformedData = data.results.map((result) => ({
-  close: result.c ?? 0,
-  high: result.h ?? 0,
-  low: result.l ?? 0,
-  open: result.o ?? 0,
-  time: result.t ?? 0,
-  volume: result.v ?? 0,
-  volumeWeighted: result.vw ?? 0,
-  transactions: result.n ?? 0,
-}));
+    const transformedData = data.results.map((result) => ({
+      close: result.c ?? 0,
+      high: result.h ?? 0,
+      low: result.l ?? 0,
+      open: result.o ?? 0,
+      time: result.t ?? 0,
+      volume: result.v ?? 0,
+      volumeWeighted: result.vw ?? 0,
+      transactions: result.n ?? 0,
+    }));
 
-const totalVolume = transformedData.reduce((sum, entry) => sum + entry.volume, 0);
+    const totalVolume = transformedData.reduce((sum, entry) => sum + entry.volume, 0);
 
-return {
-  ticker: optionTicker,
-  name: optionTicker,
-  volume: totalVolume,
-  chartData: transformedData
-};
+    return {
+      ticker: optionTicker,
+      name: optionTicker,
+      volume: totalVolume,
+      chartData: transformedData
+    };
   } catch (e) {
     console.error(`Failed to fetch options data for ${optionTicker}:`, e);
     return null;
+  }
+};
+
+const fetchTopActiveStocks = async (): Promise<ActiveStockData[]> => {
+  try {
+    const data = await createAbortableRequest(() => rest.reference.tickers({ active: true }));
+
+    if (!data || !Array.isArray(data.results) || data.results.length === 0) {
+      return [];
+    }
+
+    const sortedStocks = data.results
+      .sort((a, b) => (b.volume || 0) - (a.volume || 0))
+      .slice(0, 5)
+      .map((stock) => ({
+        ticker: stock.ticker || "",
+        name: stock.name || "",
+        market: stock.market || "",
+        locale: stock.locale || "",
+        primary_exchange: stock.primary_exchange || "",
+        type: stock.type || "",
+        active: stock.active || false,
+        currency_name: stock.currency_name || "",
+        last_updated_utc: stock.last_updated_utc || "",
+      }));
+
+    return sortedStocks;
+  } catch (e) {
+    console.error(`Failed to fetch top active stocks:`, e);
+    return [];
   }
 };
 
@@ -120,6 +150,20 @@ export const stockRouter = createTRPCRouter({
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: `No data found for ${input.optionTicker}`
+        });
+      }
+
+      return result;
+    }),
+
+  getTopActiveStocks: protectedProcedure
+    .query(async () => {
+      const result = await fetchTopActiveStocks();
+
+      if (!result || result.length === 0) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'No active stocks found.'
         });
       }
 
