@@ -15,31 +15,36 @@ import {
   FormControl,
   FormLabel,
 } from "@chakra-ui/react";
-import { RoleSets } from "~/common/roles";
+import { useSession } from "next-auth/react";
 import { useState } from "react";
 import { api } from "~/utils/api";
+import { UserRole } from "@prisma/client";
 
-interface StockVolume {
+interface ActiveStockData {
   ticker: string;
   name: string;
   market: string;
+  locale: string;
   primary_exchange: string;
-  volume: number;
-  price: number;
+  type: string;
+  active: boolean;
+  currency_name: string;
+  last_updated_utc: string;
 }
 
 const Dashboard: NextPageWithLayout = () => {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
+  const { data: session } = useSession();
 
   const {
     data: activeStocksData,
     isLoading: isLoadingActiveStocks,
     error: activeStocksError,
     refetch: refetchStocks
-  } = api.stock.getTopActiveStocks.useQuery(
-    { date: selectedDate },
+  } = api.stock.getTopActiveStocks.useQuery<ActiveStockData[]>(
+    undefined,
     {
-      enabled: !!selectedDate,
+      enabled: !!selectedDate && !!session,
       retry: 1
     }
   );
@@ -47,32 +52,6 @@ const Dashboard: NextPageWithLayout = () => {
   const handleDateChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedDate(event.target.value);
     await refetchStocks();
-  };
-
-  const formatVolume = (volume: number | null | undefined): string => {
-    if (volume === null || volume === undefined) return 'N/A';
-
-    const numVolume = Number(volume);
-    if (isNaN(numVolume)) return 'Invalid';
-
-    if (numVolume >= 1e9) {
-      return `${(numVolume / 1e9).toFixed(2)}B`;
-    } else if (numVolume >= 1e6) {
-      return `${(numVolume / 1e6).toFixed(2)}M`;
-    } else if (numVolume >= 1e3) {
-      return `${(numVolume / 1e3).toFixed(2)}K`;
-    }
-    return numVolume.toFixed(0);
-  };
-
-  const formatPrice = (price: number | null | undefined): string => {
-    if (price === null || price === undefined) return 'N/A';
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(price);
   };
 
   const renderActiveStocks = () => {
@@ -100,18 +79,18 @@ const Dashboard: NextPageWithLayout = () => {
             <Th color="white">Ticker</Th>
             <Th color="white">Name</Th>
             <Th color="white">Exchange</Th>
-            <Th color="white" isNumeric>Volume</Th>
-            <Th color="white" isNumeric>Price</Th>
+            <Th color="white">Market</Th>
+            <Th color="white">Type</Th>
           </Tr>
         </Thead>
         <Tbody>
-          {activeStocksData.map((stock, index) => (
+          {activeStocksData.map((stock: ActiveStockData, index: number) => (
             <Tr key={index}>
               <Td color="white" fontWeight="bold">{stock.ticker}</Td>
               <Td color="white">{stock.name}</Td>
               <Td color="white">{stock.primary_exchange}</Td>
-              <Td color="white" isNumeric>{formatVolume(stock.volume)}</Td>
-              <Td color="white" isNumeric>{formatPrice(stock.price)}</Td>
+              <Td color="white">{stock.market}</Td>
+              <Td color="white">{stock.type}</Td>
             </Tr>
           ))}
         </Tbody>
@@ -120,7 +99,7 @@ const Dashboard: NextPageWithLayout = () => {
   };
 
   return (
-    <AuthRequired roles={RoleSets.users}>
+    <AuthRequired roles={[UserRole.admin, UserRole.user, UserRole.owner]}>
       <Flex justifyContent="space-evenly" mt="10" maxH="84.3vh" mx="5">
         <Flex flexDirection="column" w="100%" px="7">
           <Heading
@@ -130,7 +109,7 @@ const Dashboard: NextPageWithLayout = () => {
             color="white"
             mb="4"
           >
-            Top Stocks by Trading Volume
+            Top Active Stocks
           </Heading>
 
           <FormControl mb="4">

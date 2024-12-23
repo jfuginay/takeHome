@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
 import { AdminLayout } from "~/components/Global/Layout";
 import {
   BarChart,
