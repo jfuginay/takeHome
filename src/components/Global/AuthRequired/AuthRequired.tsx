@@ -1,17 +1,13 @@
+
 import { useSession } from "next-auth/react";
 import { Button, Center, Flex, Spinner, Text } from "@chakra-ui/react";
-import Link from "next/link";
-
 import type { ReactNode } from "react";
-import { UserRole } from "@prisma/client";
-import { RoleSets } from "~/common/roles";
-import { api } from "~/utils/api";
+import { type UserRole } from "@prisma/client";
 import { useRouter } from "next/router";
 
-export default function AuthRequired({
+export function AuthRequired({
   children,
   roles,
-  allowNoGroup = false,
 }: {
   children: ReactNode;
   roles: UserRole[];
@@ -69,3 +65,5 @@ export default function AuthRequired({
 
   return <main>{children}</main>;
 }
+
+export default AuthRequired;

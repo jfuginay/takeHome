@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { AdminLayout } from "~/components/Global/Layout";
 import {
   BarChart,
@@ -47,7 +48,6 @@ const generateMockData = (stockSymbol: string, days: number) => {
 };
 
 const StockDashboard = () => {
-  const [selectedStock, setSelectedStock] = useState<string>("AAPL");
   return (
     <AdminLayout>
       <StockDashboardContent />
@@ -56,6 +56,9 @@ const StockDashboard = () => {
 };
 
 const StockDashboardContent = () => {
+  const { data: session } = useSession();
+  if (!session) return null;
+
   const [selectedStock, setSelectedStock] = useState<string>("AAPL");
   const [selectedStockSecondary, setSelectedStockSecondary] = useState<string>("SPY");
   const [startDate, setStartDate] = useState<string>("2024-12-12");
@@ -95,7 +98,7 @@ const StockDashboardContent = () => {
         </p>
       </div>
 
-      {/* Date Range Selector Row */}
+      {/* Date Range Controls */}
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div>
           <label className="text-sm mb-2 block text-white">Start Date</label>
@@ -124,18 +127,20 @@ const StockDashboardContent = () => {
         {/* Left Column */}
         <div className="space-y-4">
           <div className="rounded-lg border border-gray-700 bg-gray-800 p-4 shadow-lg">
-            <h3 className="text-lg font-medium text-white mb-3">Primary Stock Chart</h3>
-            <select
-              value={selectedStock}
-              onChange={(e) => setSelectedStock(e.target.value)}
-              className="block w-full rounded-md border border-gray-600 bg-gray-700 text-white py-2 px-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 mb-4"
-            >
-              {stockOptions.map((stock) => (
-                <option key={stock} value={stock}>
-                  {stock}
-                </option>
-              ))}
-            </select>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-white">Primary Stock Chart</h3>
+              <select
+                value={selectedStock}
+                onChange={(e) => setSelectedStock(e.target.value)}
+                className="w-32 rounded-md border border-gray-600 bg-gray-700 text-white py-2 px-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                {stockOptions.map((stock) => (
+                  <option key={stock} value={stock}>
+                    {stock}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div className="h-[400px]">
               {chartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
@@ -166,6 +171,7 @@ const StockDashboardContent = () => {
                       tick={{ fill: darkTheme.textColor }}
                     />
                     <Tooltip
+                      content={<CustomTooltip />}
                       contentStyle={{
                         backgroundColor: darkTheme.tooltipBackground,
                         border: 'none',
@@ -191,7 +197,7 @@ const StockDashboardContent = () => {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="text-gray-400">Select a stock to view its options aggregate data.</p>
+                <p className="text-gray-400">Loading chart data...</p>
               )}
             </div>
           </div>
@@ -200,18 +206,20 @@ const StockDashboardContent = () => {
         {/* Right Column */}
         <div className="space-y-4">
           <div className="rounded-lg border border-gray-700 bg-gray-800 p-4 shadow-lg">
-            <h3 className="text-lg font-medium text-white mb-3">Secondary Stock Chart</h3>
-            <select
-              value={selectedStockSecondary}
-              onChange={(e) => setSelectedStockSecondary(e.target.value)}
-              className="block w-full rounded-md border border-gray-600 bg-gray-700 text-white py-2 px-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 mb-4"
-            >
-              {stockOptions.map((stock) => (
-                <option key={stock} value={stock}>
-                  {stock}
-                </option>
-              ))}
-            </select>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-white">Secondary Stock Chart</h3>
+              <select
+                value={selectedStockSecondary}
+                onChange={(e) => setSelectedStockSecondary(e.target.value)}
+                className="w-32 rounded-md border border-gray-600 bg-gray-700 text-white py-2 px-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                {stockOptions.map((stock) => (
+                  <option key={stock} value={stock}>
+                    {stock}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div className="h-[400px]">
               {chartDataSecondary.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
@@ -242,6 +250,7 @@ const StockDashboardContent = () => {
                       tick={{ fill: darkTheme.textColor }}
                     />
                     <Tooltip
+                      content={<CustomTooltip />}
                       contentStyle={{
                         backgroundColor: darkTheme.tooltipBackground,
                         border: 'none',
@@ -267,7 +276,7 @@ const StockDashboardContent = () => {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="text-gray-400">Select a stock to view its options aggregate data.</p>
+                <p className="text-gray-400">Loading chart data...</p>
               )}
             </div>
           </div>
