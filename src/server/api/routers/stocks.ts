@@ -46,21 +46,14 @@ const createAbortableRequest = async <T>(callback: (controller: AbortController)
 // Fetch historical data for each stock
 const fetchOptionAggregateData = async (
   optionTicker: string,
-  multiplier: number = 1,
-  timespan: string = "day",
-  from: string = "2024-12-19",
-  to: string = "2024-12-19"
+  multiplier = 1,
+  timespan: string,
+  from: string,
+  to: string
 ): Promise<StockData | null> => {
   try {
-    const data = await createAbortableRequest(
-      () =>
-        rest.options.aggregates(
-          optionTicker,
-          multiplier,
-          timespan,
-          from,
-          to
-        )
+    const data = await createAbortableRequest(() =>
+      rest.options.aggregates(optionTicker, multiplier, timespan, from, to)
     );
 
     if (!data || !Array.isArray(data.results) || data.results.length === 0) {
@@ -68,7 +61,7 @@ const fetchOptionAggregateData = async (
         ticker: optionTicker,
         name: optionTicker,
         volume: 0,
-        chartData: []
+        chartData: [],
       };
     }
 
@@ -83,13 +76,16 @@ const fetchOptionAggregateData = async (
       transactions: result.n ?? 0,
     }));
 
-    const totalVolume = transformedData.reduce((sum, entry) => sum + entry.volume, 0);
+    const totalVolume = transformedData.reduce(
+      (sum, entry) => sum + entry.volume,
+      0
+    );
 
     return {
       ticker: optionTicker,
       name: optionTicker,
       volume: totalVolume,
-      chartData: transformedData
+      chartData: transformedData,
     };
   } catch (e) {
     console.error(`Failed to fetch options data for ${optionTicker}:`, e);
@@ -99,14 +95,13 @@ const fetchOptionAggregateData = async (
 
 const fetchTopActiveStocks = async (): Promise<ActiveStockData[]> => {
   try {
-    const data = await createAbortableRequest(() => rest.reference.tickers({ active: true }));
+    const data = await createAbortableRequest(() => rest.reference.tickers({ active: "true" }));
 
     if (!data || !Array.isArray(data.results) || data.results.length === 0) {
       return [];
     }
 
     const sortedStocks = data.results
-      .sort((a, b) => (b.volume || 0) - (a.volume || 0))
       .slice(0, 5)
       .map((stock) => ({
         ticker: stock.ticker || "",
@@ -119,6 +114,7 @@ const fetchTopActiveStocks = async (): Promise<ActiveStockData[]> => {
         currency_name: stock.currency_name || "",
         last_updated_utc: stock.last_updated_utc || "",
       }));
+
 
     return sortedStocks;
   } catch (e) {
