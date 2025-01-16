@@ -16,7 +16,6 @@ export const getDatabaseConnection = async (): Promise<Db> => {
 
   if (!client) {
     client = new MongoClient(env.MONGODB_URI, {
-      useNewUrlParser: true,
       useUnifiedTopology: true,
     });
     await client.connect(); // Connect to MongoDB
