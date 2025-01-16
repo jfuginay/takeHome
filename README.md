@@ -1,113 +1,127 @@
+# Take-Home Assignment: Dynamic Data Visualization Component
 
-# Hedge Pulse
+## Task
 
-## Tech Stack
+Design and implement a dynamic data visualization component.
 
--   Client/Server - [React/Next](https://nextjs.org/)
--   Database - [Postgres](https://www.postgresql.org/)
--   ORM - [Prisma](https://www.prisma.io/)
--   API - [tRPC](https://trpc.io/)
--   State - [React-Query](https://tanstack.com/query/v4/?from=reactQueryV3&original=https://react-query-v3.tanstack.com/)
--   Forms - [React-Hook-Form](https://react-hook-form.com/)
--   Styling - [Tailwindcss](https://tailwindcss.com/)
--   UI library - [Chakra](https://chakra-ui.com/)
--   Input validation - [Zod](https://zod.dev/)
--   Authentication - [NextAuth](https://next-auth.js.org/)
+## Overview
 
-## Development Server
+The goal is to create a **reusable dashboard widget component** that displays dynamic data in an interactive and visually appealing manner. This component is intended for integration into a larger dashboard application.
 
-In order to set up your development environment you will need to download some prerequisites:
+## Requirements
 
--   `docker`
--   `docker-compose`
--   `node 16 or higher`
--   `npm` setup and configured on your machine.
+### Frontend
+**Tech Stack**: Next.js, TypeScript, Tailwind CSS
 
-Below are instructions for setting up your development environment.
-You may also use [n](https://www.npmjs.com/package/n) to manage your node versions by running:
+- **Single Page**: Create a single page that showcases your visualization component.
+- **Dashboard Widget**: Implement a dashboard widget that presents data in a chart or graph format.
+- **Responsiveness**: Ensure the widget performs well on both desktop and mobile devices.
+- **Interactivity**: Add interactivity elements such as hover effects, tooltips, or click events.
+- **Styling**: Use Tailwind CSS for styling with a focus on clean, intuitive design.
 
-```bash
-sudo npm i -g n
-```
+### Backend
+**Tech Stack**: Next.js API Routes, MongoDB
 
-```bash
-sudo n 16
-```
+- **API Route**: Implement an API route to serve mock data for your visualization.
+- **Data Fetching**: Fetch data from the API within your component.
+- **Data Storage**: Use MongoDB to store and retrieve your mock data.
+- **Mock Data**: Use the provided mock dataset in the implementation.
 
-### Install Prereqs
+---
 
--   Docker Desktop https://www.docker.com/products/docker-desktop/
--   Node 16 (LTS) https://nodejs.org/en/download/
+## Tech Stack References
 
+- **Frontend**
+    - Framework: [Next.js](https://nextjs.org/)
+    - Styling: [Tailwind CSS](https://tailwindcss.com/)
+    - Programming Language: [TypeScript](https://www.typescriptlang.org/)
+
+- **Backend**
+    - API: [Next.js API Routes](https://nextjs.org/docs/api-routes/introduction)
+    - Database: [MongoDB](https://www.mongodb.com/)
+
+---
+
+## Development Setup
+
+Below are the instructions to help set up the development environment.
+
+### Prerequisites
+
+Ensure you have the following installed:
+- **Node.js 16+** ([Download here](https://nodejs.org/en/download/))
+- **npm** ([Included with Node.js](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm))
+- **Docker and Docker-Compose** ([Docker Desktop](https://www.docker.com/products/docker-desktop/))
+
+Validate installations:
 ```bash
 docker run hello-world
-```
-
-```bash
 node -v
 ```
 
-You should see the following (or a version slightly higher)
-
+Expected output for Node.js:
 ```bash
-v16.17.1
+v16.x.x or higher
 ```
 
-### Setup environment
+### Environment Setup
 
+1. Install dependencies and set up environment variables:
+    ```bash
+    npm run first-time-setup
+    ```
+
+2. Start the development server:
+    ```bash
+    npm run start:test-env
+    ```
+
+3. Apply database migrations and seed mock data:
+    ```bash
+    npm run prisma:migrate-dev
+    npm run prisma:seed
+    ```
+
+---
+
+## Usage
+
+To view the dashboard widget, navigate to the following routes in your browser:
+
+- **Frontend**:  
+  [http://localhost:3000](http://localhost:3000)
+- **Backend API**:  
+  [http://localhost:3000/api](http://localhost:3000/api)
+- **Mock Data (MailHog)**:  
+  [http://localhost:8025](http://localhost:8025)
+
+---
+
+## Getting Started with the Application
+
+1. Open the frontend at [http://localhost:3000](http://localhost:3000).
+2. Create an account by signing in with an email.
+3. Verify your account in the MailHog inbox at [http://localhost:8025](http://localhost:8025).
+
+---
+
+## Building the Application
+
+For a production build:
 ```bash
-# Install dependencies, create environment variables
-npm run first-time-setup
+npm run next:build
 ```
 
-Once this completes, the following command will start up a development server on your local machine:
+The build artifacts will be located in the `.next` directory.
 
-```bash
-# Starts the docker containers for PostgreSQL, MailHog and runs Next.js with hot-reload support
-npm run start:test-env
-```
+---
 
-After those servers boot, you can run migrations and seed your database
+## Notes
 
-```bash
-npm run prisma:migrate-dev
-npm run prisma:seed
-```
+Feel free to reference the following resources for additional guidance:
 
-### Create An Account
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
+- [TypeScript Documentation](https://www.typescriptlang.org/docs/)
 
-1. Go to http://localhost:3000
-2. Click on `Sign in`, and enter an email
-3. Open your inbox at http://localhost:8025 to verify your account
-
-### Commonly used URL's
-
-```bash
-# The front-end React UI
-http://localhost:3000
-# The backend Next.js server
-http://localhost:3000/api
-# MailHog inbox
-http://localhost:8025
-```
-
-## Making changes to the database
-
-1. Edit the database schema inside `prisma/schema.prisma`
-2. Run `npm run prisma:format` to check for errors
-3. Run `npm run prisma:migrate-dev`
-
-## Build
-
-Run `npm run next:build` to build the project for production. The build artifacts will be stored in the `.next` directory.
-
-## Useful resources
-
--   [Next in 100s](https://www.youtube.com/watch?v=Sklc_fQBmcs)
--   [Prisma in 100s](https://www.youtube.com/watch?v=rLRIB6AF2Dg)
--   [React-Query in 100s](https://www.youtube.com/watch?v=novnyCaa7To)
--   [Tailwind in 100s](https://www.youtube.com/watch?v=mr15Xzb1Ook)
--   [TypeScript in 100s](https://www.youtube.com/watch?v=zQnBQ4tB3ZA)
--   [Docker in 100s](https://www.youtube.com/watch?v=Gjnup-PuquQ)
--   [Build a Blog With the T3 Stack](https://www.youtube.com/watch?v=syEWlxVFUrY)
--   [Build a Live Chat Application with the T3 Stack](https://www.youtube.com/watch?v=dXRRY37MPuk)
+Happy Coding!
