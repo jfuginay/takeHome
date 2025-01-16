@@ -20,18 +20,10 @@ const Navbar: React.FC<React.HTMLAttributes<HTMLElement>> = ({ ...rest }) => {
           {...rest}
       >
         <Flex w="full" justifyContent={{ md: 'space-between', base: 'center' }} alignItems="center">
-          <Text display={{ base: 'none', md: 'inline-block' }} as="b" fontSize="2xl" color={textColor}>
-            HedgePulse
+          <Text display={{ base: 'none', md: 'inline-block' }} as="b" fontSize="2xl" color={textColor}>TechGear Sign In
           </Text>
-          <HStack spacing={8} display={{ base: 'none', md: 'flex' }} alignItems="center">
-            <Link href="/" passHref>
-              <Text as="a" color={textColor} _hover={{ color: "gray.300" }}>Dashboard</Text>
-            </Link>
-            <Link href="/charts" passHref>
-              <Text as="a" color={textColor} _hover={{ color: "gray.300" }}>Charts</Text>
-            </Link>
-          </HStack>
-          <img src="/hedgepulse.png" alt="No Logo" />
+
+          <img src="/techGearLogo.png" alt="No Logo" />
         </Flex>
       </Flex>
   );
