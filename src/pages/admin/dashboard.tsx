@@ -77,6 +77,7 @@ export default function Dashboard() {
   if (loading) return <div className="w-full p-4">Loading...</div>;
   if (error) return <div className="w-full p-4 text-red-500">{error}</div>;
 
+
   return (
     <AdminLayout>
       <div className="w-full p-4">
