@@ -26,6 +26,13 @@ export default function Dashboard() {
           { date: "2023-03", totalSales: 6200, orderCount: 170 },
           { date: "2023-04", totalSales: 8000, orderCount: 190 },
           { date: "2023-05", totalSales: 4500, orderCount: 140 },
+          { date: "2023-06", totalSales: 5200, orderCount: 160 },
+          { date: "2023-07", totalSales: 4800, orderCount: 155 },
+          { date: "2023-08", totalSales: 6000, orderCount: 175 },
+          { date: "2023-09", totalSales: 7000, orderCount: 200 },
+          { date: "2023-10", totalSales: 7500, orderCount: 210 },
+          { date: "2023-11", totalSales: 6200, orderCount: 180 },
+          { date: "2023-12", totalSales: 8000, orderCount: 220 },
         ];
         setChartData(staticData);
       } catch (error) {
@@ -55,7 +62,6 @@ export default function Dashboard() {
 
   const options: import("chart.js").ChartOptions<"bar"> = {
     indexAxis: "y", // Horizontal bar chart
-    responsive: true,
     responsive: true,
     plugins: {
       legend: {
