@@ -39,8 +39,8 @@ const Home: NextPageWithLayout = () => {
           <Image
             src={"/techGearLogo.png"}
             alt={"No Logo"}
-            width={400}
-            height={400}
+            width={200}
+            height={80}
           />
           <div className="flex flex-col items-center gap-2">
 
