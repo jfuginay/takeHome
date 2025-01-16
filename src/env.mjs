@@ -5,6 +5,8 @@ import { z } from "zod";
  * built with invalid env vars.
  */
 const server = z.object({
+  MONGODB_DATABASE: z.string().min(1),
+  MONGODB_URI: z.string().min(1),
   DATABASE_URL: z.string().url(),
   NODE_ENV: z.enum(["development", "test", "production"]),
   NEXTAUTH_SECRET:
@@ -48,6 +50,8 @@ const client = z.object({
  * @type {Record<keyof z.infer<typeof server> | keyof z.infer<typeof client>, string | undefined>}
  */
 const processEnv = {
+  MONGODB_URI: process.env.MONGODB_URI,
+  MONGODB_DATABASE: process.env.MONGODB_DATABASE,
   DATABASE_URL: process.env.DATABASE_URL,
   NODE_ENV: process.env.NODE_ENV,
   NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,

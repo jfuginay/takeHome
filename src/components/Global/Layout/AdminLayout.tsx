@@ -47,6 +47,7 @@ interface LinkItemProps {
   url: string;
 }
 
+
 const LinkItems: Array<LinkItemProps> = [
   {
     id: LinkItem.dashboard,
@@ -79,24 +80,15 @@ const LinkItems: Array<LinkItemProps> = [
 const displayToRole: { [key: string]: LinkItem[] } = {
   [UserRole.owner]: [
     LinkItem.dashboard,
-      LinkItem.charts,
-    LinkItem.map,
-    LinkItem.list,
-    LinkItem.groups,
     LinkItem.users,
   ],
   [UserRole.admin]: [
     LinkItem.dashboard,
-      LinkItem.charts,
-    LinkItem.map,
-    LinkItem.list,
-    LinkItem.groups,
     LinkItem.users,
   ],
   [UserRole.user]: [
-    LinkItem.map,
-      LinkItem.charts,
-    LinkItem.list],
+      LinkItem.dashboard,
+    LinkItem.users],
 };
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
@@ -252,11 +244,11 @@ const Navbar = ({ onOpen, ...rest }: MobileProps) => {
               fontSize="3xl"
               color={"white"}
           >
-            HedgePulse
+            TechGear Emporium
           </Text>
 
-          <img
-              src={"/hedgepulse.png"}
+          <img style={{ width: "100px", height: "100px" }}
+              src={"/techGearLogo.png"}
               alt={"No Logo"}
           />
         </Flex>
