@@ -33,11 +33,12 @@ import { UserRole } from "@prisma/client";
 
 enum LinkItem {
   dashboard = "dashboard",
-  map = "map",
-  charts ="charts",
-  list = "list",
-  groups = "groups",
+  // map = "map",
+  // charts ="charts",
+  // list = "list",
+  // groups = "groups",
   users = "users",
+  sales = "sales",
 }
 
 interface LinkItemProps {
@@ -55,12 +56,12 @@ const LinkItems: Array<LinkItemProps> = [
     icon: MdSpaceDashboard,
     url: "/admin/dashboard",
   },
-  {
-    id: LinkItem.charts,
-    name: "Charts",
-    icon: SiOpenstreetmap,
-    url: "/admin/charts",
-  },
+  // {
+  //   id: LinkItem.charts,
+  //   name: "Charts",
+  //   icon: SiOpenstreetmap,
+  //   url: "/admin/charts",
+  // },
   // {
   //   id: LinkItem.map,
   //   name: "Map View",

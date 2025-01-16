@@ -26,21 +26,18 @@ const Home: NextPageWithLayout = () => {
     );
   }
 
-  if (status === "authenticated") {
-    void router.push("/admin/dashboard");
-  }
 
   return (
     <>
       <Head>
-        <title>Hedge Pulse</title>
+        <title>Tech Gear</title>
         <meta name="description" content="" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="flex min-h-screen flex-col items-center justify-center">
         <div className="container mb-36 flex flex-col items-center justify-center gap-12 px-4 py-16">
           <Image
-            src={"/hedgepulse.png"}
+            src={"/techGearLogo.png"}
             alt={"No Logo"}
             width={400}
             height={400}
