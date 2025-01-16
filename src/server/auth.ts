@@ -10,8 +10,6 @@ import { env } from "~/env.mjs";
 import { prisma } from "~/server/db";
 import { type UserRole } from "@prisma/client";
 import Okta from "next-auth/providers/okta";
-import {mockSession} from "next-auth/client/__tests__/helpers/mocks";
-import user = mockSession.user;
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
